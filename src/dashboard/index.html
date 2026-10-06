@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#10131b">
+    <title>ServerPilot Dashboard</title>
+    <link rel="stylesheet" href="/dashboard.css">
+    <script src="/dashboard.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="ServerPilot home">
+        <span class="brand-mark" aria-hidden="true">SP</span>
+        <span>ServerPilot</span>
+      </a>
+      <div class="server-context">
+        <label class="visually-hidden" for="server-select">Active Discord server</label>
+        <select id="server-select" disabled>
+          <option>Sign in to select a server</option>
+        </select>
+      </div>
+      <div class="topbar-actions">
+        <label class="visually-hidden" for="theme-select">Color theme</label>
+        <select id="theme-select" class="theme-select">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+          <option value="system">System</option>
+        </select>
+        <div id="profile" class="profile" hidden></div>
+        <button id="logout-button" class="button button-quiet" type="button" hidden>Log out</button>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section id="loading-state" class="state-panel" role="status">
+        <span class="status-dot status-dot-info" aria-hidden="true"></span>
+        <p>Checking your ServerPilot session...</p>
+      </section>
+
+      <section id="auth-state" class="auth-panel" hidden>
+        <div class="auth-card">
+          <span class="eyebrow">YOUR COMMUNITY, IN CONTEXT</span>
+          <h1>Run your server with clarity.</h1>
+          <p id="auth-message" class="muted">Sign in with Discord to see servers you are allowed to manage.</p>
+          <a id="login-link" class="button button-primary" href="/api/v1/auth/discord?returnTo=%2F">Continue with Discord</a>
+          <button id="auth-retry" class="button button-quiet" type="button">Retry</button>
+          <p id="auth-error" class="feedback feedback-danger" role="alert" hidden></p>
+          <p class="fine-print">ServerPilot checks your current Discord permissions. A server ID in the browser never grants access.</p>
+        </div>
+      </section>
+
+      <section id="dashboard" class="dashboard-layout" hidden>
+        <aside class="sidebar">
+          <div class="sidebar-label">WORKSPACE</div>
+          <nav id="primary-nav" aria-label="Dashboard navigation"></nav>
+          <div class="sidebar-footnote">
+            <span class="status-dot status-dot-info" aria-hidden="true"></span>
+            <span>Dashboard foundation</span>
+          </div>
+        </aside>
+        <div class="page-area">
+          <div id="app-feedback" class="app-feedback" role="status" aria-live="polite" hidden></div>
+          <div id="page-heading" class="page-heading"></div>
+          <div id="page-content" class="page-content"></div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

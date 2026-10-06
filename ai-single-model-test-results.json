@@ -1,0 +1,729 @@
+{
+  "test": "ServerPilot single-model manual AI test",
+  "generatedAt": "2026-10-05T21:34:39.656Z",
+  "status": "complete",
+  "provider": "Configured AI-compatible provider",
+  "model": {
+    "id": "google/gemma-4-26b-a4b-it:free",
+    "name": "Gemma 4 26B A4B free"
+  },
+  "catalogName": "Google: Gemma 4 26B A4B  (free)",
+  "settings": {
+    "temperature": 0.2,
+    "requestFormat": "json_object",
+    "sequential": true,
+    "delayBetweenRequestsMs": 25000,
+    "retryDelayAfter429Ms": 30000,
+    "maxRetriesPerPrompt": 1,
+    "maxGenerationRequests": 10
+  },
+  "prompts": [
+    {
+      "id": 1,
+      "label": "Small Minecraft",
+      "prompt": "I need a Minecraft Discord for about 20 mates. Keep it chill and simple. We need somewhere to chat, show builds, one general voice channel and occasional events. No tickets, no massive staff structure.",
+      "type": "Gaming"
+    },
+    {
+      "id": 2,
+      "label": "Large professional Minecraft",
+      "prompt": "I need a professional public Minecraft Discord for around 2,000 members. We run weekly tournaments, have a staff team, need applications, support tickets, announcements, several voice channels, a media section and team areas.",
+      "type": "Gaming"
+    },
+    {
+      "id": 3,
+      "label": "Explicit exclusions",
+      "prompt": "Make me a gaming community server for around 100 people. We mainly play Minecraft and Rocket League. We want general chat, game channels, voice channels and occasional events. Do not add tickets, applications, staff recruitment, economy systems or premium/VIP roles.",
+      "type": "Gaming"
+    },
+    {
+      "id": 4,
+      "label": "Messy natural language",
+      "prompt": "yo basically me and a bunch of people are making a server, probably like 60 or 70 people, we play minecraft mostly but sometimes other stuff too. want it to feel active but not like one of those huge public servers. probably need chat, some vcs, somewhere for screenshots/builds and maybe events. don't overdo it",
+      "type": "Gaming"
+    },
+    {
+      "id": 5,
+      "label": "Events but not tournaments",
+      "prompt": "We have a 150-member community. We sometimes run community events like movie nights, game nights and Q&As. We need an events area and announcements, but we are NOT a competitive gaming server and do not need tournaments, teams or player recruitment.",
+      "type": "Community"
+    }
+  ],
+  "totals": {
+    "successful": 0,
+    "rateLimited": 10,
+    "timeouts": 0,
+    "validationFailures": 0,
+    "retries": 5,
+    "generationRequests": 10
+  },
+  "results": [
+    {
+      "promptId": 1,
+      "label": "Small Minecraft",
+      "prompt": "I need a Minecraft Discord for about 20 mates. Keep it chill and simple. We need somewhere to chat, show builds, one general voice channel and occasional events. No tickets, no massive staff structure.",
+      "attempts": [
+        {
+          "requestNumber": 1,
+          "status": 429,
+          "latencyMs": 677,
+          "outcome": "rate_limited",
+          "error": "HTTP 429 rate limited.",
+          "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+          "request": {
+            "model": "google/gemma-4-26b-a4b-it:free",
+            "temperature": 0.2,
+            "responseFormat": {
+              "type": "json_object"
+            },
+            "systemPrompt": "Plan a Discord community based on the original brief, which is the primary source of truth. Priority order: explicit user requirements and exclusions; strongly implied requirements; size, tone, and context; selected server type and templates; generic defaults. A lower priority must never override a higher one. Treat templates as optional suggestions, never mandatory channels. Respect negation, including informal wording. Do not create support or ticket infrastructure unless requested; \"no tickets\" excludes both tickets and support unless support is separately requested. When support tickets are requested, do not add a redundant general support channel unless the user asks for one separately. A teams area does not imply player recruitment; add recruitment, tryout, or player application channels only when those are explicitly requested. Do not invent monetisation or membership tiers such as VIP, paid roles, donations, supporters, boosters, or sponsorships without evidence in the brief. An occasional community event means one simple events channel, not tournaments, teams, or event staff. Create tournament infrastructure only when tournaments/competitive organisation is requested. A mentioned game permits channels only for that named game; never add unrelated games. A build showcase is one focused channel, not generic media, clips, or creator infrastructure. \"Only these channels\" or \"nothing else\" means exactly those requested channels (plus the requested voice channels), without defaults. For small groups, private/friend servers, casual/chill tone, or minimal language, keep the structure lightweight and roles limited; scale complexity with stated membership and organisational needs. Do not invent roles or channels from type alone. Reflect tone naturally without slogans. Include a rules channel only when requested or genuinely suitable as a small baseline; when present, provide 3-5 concise community-specific rules, each under 160 characters, with no duplicates, contradictions, niche invented policies, or filler. If no rules channel is planned, rules must be []. Return exactly the SetupPlan shape and preserve type and description. Never include executable actions, permission overwrites, or Administrator permissions.",
+            "userPayload": "{\"selectedType\":\"Gaming\",\"description\":\"I need a Minecraft Discord for about 20 mates. Keep it chill and simple. We need somewhere to chat, show builds, one general voice channel and occasional events. No tickets, no massive staff structure.\",\"intent\":{\"approximateSize\":20,\"scale\":\"small\",\"tone\":\"chill\",\"moderationPreference\":\"unspecified\",\"requestedFeatures\":[\"voice\",\"events\",\"build-showcase\",\"general\"],\"excludedFeatures\":[\"tickets\",\"staff-roles\"],\"requestedChannels\":[\"general\",\"build-showcase\",\"voice\",\"events\"],\"excludedChannels\":[\"tickets\"],\"playerRecruitmentRequested\":false,\"separateSupportChannelRequested\":false,\"gameNames\":[\"minecraft\"],\"onlyRequestedFeatures\":false,\"minimal\":true,\"rulesPreference\":\"unspecified\"},\"fallbackPlan\":{\"type\":\"Gaming\",\"description\":\"I need a Minecraft Discord for about 20 mates. Keep it chill and simple. We need somewhere to chat, show builds, one general voice channel and occasional events. No tickets, no massive staff structure.\",\"categories\":[{\"name\":\"💬 COMMUNITY\",\"channels\":[\"general\"]},{\"name\":\"🎮 MINECRAFT\",\"channels\":[\"build-showcase\",\"minecraft-chat\"]},{\"name\":\"📅 EVENTS\",\"channels\":[\"events\"]}],\"voiceCategories\":[{\"name\":\"🔊 VOICE\",\"channels\":[\"General\"]}],\"recommendedFeatures\":[],\"requestedFeatures\":[\"voice channels\",\"events\",\"build showcase\",\"general chat\"],\"skippedFeatures\":[\"ticket channel\"],\"roles\":[{\"name\":\"👑 Owner\",\"purpose\":\"Server owner identity; no additional permissions are assigned automatically.\",\"color\":15844367,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"owner\",\"recommended\":false,\"explicitlyRequested\":false},{\"name\":\"🎮 Member\",\"purpose\":\"Normal community member access.\",\"color\":9807270,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"member\",\"recommended\":true,\"explicitlyRequested\":true}],\"rules\":[]},\"outputShape\":\"Return a SetupPlan-shaped JSON object with type, description, categories, voiceCategories, recommendedFeatures, requestedFeatures, skippedFeatures, roles, and rules (3-5 short strings, or [] when there is no rules channel). Treat fallbackPlan as a reference for explicit intent and safe defaults, not a required template. Never add known channels merely because they occur in fallbackPlan.\"}"
+          }
+        },
+        {
+          "requestNumber": 2,
+          "status": 429,
+          "latencyMs": 152,
+          "outcome": "rate_limited",
+          "error": "HTTP 429 rate limited.",
+          "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+          "request": {
+            "model": "google/gemma-4-26b-a4b-it:free",
+            "temperature": 0.2,
+            "responseFormat": {
+              "type": "json_object"
+            },
+            "systemPrompt": "Plan a Discord community based on the original brief, which is the primary source of truth. Priority order: explicit user requirements and exclusions; strongly implied requirements; size, tone, and context; selected server type and templates; generic defaults. A lower priority must never override a higher one. Treat templates as optional suggestions, never mandatory channels. Respect negation, including informal wording. Do not create support or ticket infrastructure unless requested; \"no tickets\" excludes both tickets and support unless support is separately requested. When support tickets are requested, do not add a redundant general support channel unless the user asks for one separately. A teams area does not imply player recruitment; add recruitment, tryout, or player application channels only when those are explicitly requested. Do not invent monetisation or membership tiers such as VIP, paid roles, donations, supporters, boosters, or sponsorships without evidence in the brief. An occasional community event means one simple events channel, not tournaments, teams, or event staff. Create tournament infrastructure only when tournaments/competitive organisation is requested. A mentioned game permits channels only for that named game; never add unrelated games. A build showcase is one focused channel, not generic media, clips, or creator infrastructure. \"Only these channels\" or \"nothing else\" means exactly those requested channels (plus the requested voice channels), without defaults. For small groups, private/friend servers, casual/chill tone, or minimal language, keep the structure lightweight and roles limited; scale complexity with stated membership and organisational needs. Do not invent roles or channels from type alone. Reflect tone naturally without slogans. Include a rules channel only when requested or genuinely suitable as a small baseline; when present, provide 3-5 concise community-specific rules, each under 160 characters, with no duplicates, contradictions, niche invented policies, or filler. If no rules channel is planned, rules must be []. Return exactly the SetupPlan shape and preserve type and description. Never include executable actions, permission overwrites, or Administrator permissions.",
+            "userPayload": "{\"selectedType\":\"Gaming\",\"description\":\"I need a Minecraft Discord for about 20 mates. Keep it chill and simple. We need somewhere to chat, show builds, one general voice channel and occasional events. No tickets, no massive staff structure.\",\"intent\":{\"approximateSize\":20,\"scale\":\"small\",\"tone\":\"chill\",\"moderationPreference\":\"unspecified\",\"requestedFeatures\":[\"voice\",\"events\",\"build-showcase\",\"general\"],\"excludedFeatures\":[\"tickets\",\"staff-roles\"],\"requestedChannels\":[\"general\",\"build-showcase\",\"voice\",\"events\"],\"excludedChannels\":[\"tickets\"],\"playerRecruitmentRequested\":false,\"separateSupportChannelRequested\":false,\"gameNames\":[\"minecraft\"],\"onlyRequestedFeatures\":false,\"minimal\":true,\"rulesPreference\":\"unspecified\"},\"fallbackPlan\":{\"type\":\"Gaming\",\"description\":\"I need a Minecraft Discord for about 20 mates. Keep it chill and simple. We need somewhere to chat, show builds, one general voice channel and occasional events. No tickets, no massive staff structure.\",\"categories\":[{\"name\":\"💬 COMMUNITY\",\"channels\":[\"general\"]},{\"name\":\"🎮 MINECRAFT\",\"channels\":[\"build-showcase\",\"minecraft-chat\"]},{\"name\":\"📅 EVENTS\",\"channels\":[\"events\"]}],\"voiceCategories\":[{\"name\":\"🔊 VOICE\",\"channels\":[\"General\"]}],\"recommendedFeatures\":[],\"requestedFeatures\":[\"voice channels\",\"events\",\"build showcase\",\"general chat\"],\"skippedFeatures\":[\"ticket channel\"],\"roles\":[{\"name\":\"👑 Owner\",\"purpose\":\"Server owner identity; no additional permissions are assigned automatically.\",\"color\":15844367,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"owner\",\"recommended\":false,\"explicitlyRequested\":false},{\"name\":\"🎮 Member\",\"purpose\":\"Normal community member access.\",\"color\":9807270,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"member\",\"recommended\":true,\"explicitlyRequested\":true}],\"rules\":[]},\"outputShape\":\"Return a SetupPlan-shaped JSON object with type, description, categories, voiceCategories, recommendedFeatures, requestedFeatures, skippedFeatures, roles, and rules (3-5 short strings, or [] when there is no rules channel). Treat fallbackPlan as a reference for explicit intent and safe defaults, not a required template. Never add known channels merely because they occur in fallbackPlan.\"}"
+          }
+        }
+      ],
+      "status": "rate_limited",
+      "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+      "validJson": null,
+      "schemaValidation": "not-run",
+      "validationErrors": [],
+      "fallbackResult": {
+        "type": "Gaming",
+        "description": "I need a Minecraft Discord for about 20 mates. Keep it chill and simple. We need somewhere to chat, show builds, one general voice channel and occasional events. No tickets, no massive staff structure.",
+        "categories": [
+          {
+            "name": "💬 COMMUNITY",
+            "channels": [
+              "general"
+            ]
+          },
+          {
+            "name": "🎮 MINECRAFT",
+            "channels": [
+              "build-showcase",
+              "minecraft-chat"
+            ]
+          },
+          {
+            "name": "📅 EVENTS",
+            "channels": [
+              "events"
+            ]
+          }
+        ],
+        "voiceCategories": [
+          {
+            "name": "🔊 VOICE",
+            "channels": [
+              "General"
+            ]
+          }
+        ],
+        "recommendedFeatures": [],
+        "requestedFeatures": [
+          "voice channels",
+          "events",
+          "build showcase",
+          "general chat"
+        ],
+        "skippedFeatures": [
+          "ticket channel"
+        ],
+        "roles": [
+          {
+            "name": "👑 Owner",
+            "purpose": "Server owner identity; no additional permissions are assigned automatically.",
+            "color": 15844367,
+            "permissions": [],
+            "permissionsValue": "0",
+            "kind": "owner",
+            "recommended": false,
+            "explicitlyRequested": false
+          },
+          {
+            "name": "🎮 Member",
+            "purpose": "Normal community member access.",
+            "color": 9807270,
+            "permissions": [],
+            "permissionsValue": "0",
+            "kind": "member",
+            "recommended": true,
+            "explicitlyRequested": true
+          }
+        ],
+        "rules": []
+      },
+      "fallbackLabel": "FALLBACK",
+      "notes": [
+        "Both the original request and one retry returned HTTP 429; the model returned no proposal, so understanding, correctness, proportionality, and hallucinations cannot be assessed."
+      ]
+    },
+    {
+      "promptId": 2,
+      "label": "Large professional Minecraft",
+      "prompt": "I need a professional public Minecraft Discord for around 2,000 members. We run weekly tournaments, have a staff team, need applications, support tickets, announcements, several voice channels, a media section and team areas.",
+      "attempts": [
+        {
+          "requestNumber": 3,
+          "status": 429,
+          "latencyMs": 118,
+          "outcome": "rate_limited",
+          "error": "HTTP 429 rate limited.",
+          "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+          "request": {
+            "model": "google/gemma-4-26b-a4b-it:free",
+            "temperature": 0.2,
+            "responseFormat": {
+              "type": "json_object"
+            },
+            "systemPrompt": "Plan a Discord community based on the original brief, which is the primary source of truth. Priority order: explicit user requirements and exclusions; strongly implied requirements; size, tone, and context; selected server type and templates; generic defaults. A lower priority must never override a higher one. Treat templates as optional suggestions, never mandatory channels. Respect negation, including informal wording. Do not create support or ticket infrastructure unless requested; \"no tickets\" excludes both tickets and support unless support is separately requested. When support tickets are requested, do not add a redundant general support channel unless the user asks for one separately. A teams area does not imply player recruitment; add recruitment, tryout, or player application channels only when those are explicitly requested. Do not invent monetisation or membership tiers such as VIP, paid roles, donations, supporters, boosters, or sponsorships without evidence in the brief. An occasional community event means one simple events channel, not tournaments, teams, or event staff. Create tournament infrastructure only when tournaments/competitive organisation is requested. A mentioned game permits channels only for that named game; never add unrelated games. A build showcase is one focused channel, not generic media, clips, or creator infrastructure. \"Only these channels\" or \"nothing else\" means exactly those requested channels (plus the requested voice channels), without defaults. For small groups, private/friend servers, casual/chill tone, or minimal language, keep the structure lightweight and roles limited; scale complexity with stated membership and organisational needs. Do not invent roles or channels from type alone. Reflect tone naturally without slogans. Include a rules channel only when requested or genuinely suitable as a small baseline; when present, provide 3-5 concise community-specific rules, each under 160 characters, with no duplicates, contradictions, niche invented policies, or filler. If no rules channel is planned, rules must be []. Return exactly the SetupPlan shape and preserve type and description. Never include executable actions, permission overwrites, or Administrator permissions.",
+            "userPayload": "{\"selectedType\":\"Gaming\",\"description\":\"I need a professional public Minecraft Discord for around 2,000 members. We run weekly tournaments, have a staff team, need applications, support tickets, announcements, several voice channels, a media section and team areas.\",\"intent\":{\"approximateSize\":0,\"scale\":\"small\",\"tone\":\"professional\",\"moderationPreference\":\"unspecified\",\"requestedFeatures\":[\"voice\",\"support\",\"tickets\",\"tournaments\",\"media\",\"announcements\",\"teams\",\"applications\"],\"excludedFeatures\":[],\"requestedChannels\":[\"voice\",\"tournaments\",\"announcements\",\"tickets\",\"support\",\"staff-applications\"],\"excludedChannels\":[],\"playerRecruitmentRequested\":false,\"separateSupportChannelRequested\":false,\"gameNames\":[\"minecraft\"],\"onlyRequestedFeatures\":false,\"minimal\":false,\"rulesPreference\":\"unspecified\",\"voiceChannelCount\":3},\"fallbackPlan\":{\"type\":\"Gaming\",\"description\":\"I need a professional public Minecraft Discord for around 2,000 members. We run weekly tournaments, have a staff team, need applications, support tickets, announcements, several voice channels, a media section and team areas.\",\"categories\":[{\"name\":\"💬 COMMUNITY\",\"channels\":[\"general\"]},{\"name\":\"🏆 TOURNAMENTS\",\"channels\":[\"tournaments\"]},{\"name\":\"📢 INFORMATION\",\"channels\":[\"announcements\"]},{\"name\":\"🛠️ SUPPORT\",\"channels\":[\"tickets\"]},{\"name\":\"🛠️ STAFF\",\"channels\":[\"staff-applications\"]},{\"name\":\"🎮 MINECRAFT\",\"channels\":[\"minecraft-chat\"]},{\"name\":\"🎬 CONTENT\",\"channels\":[\"content-discussion\",\"feedback\",\"video-sharing\"]},{\"name\":\"🏆 COMPETITION\",\"channels\":[\"teams\"]}],\"voiceCategories\":[{\"name\":\"🔊 VOICE\",\"channels\":[\"General\",\"Gaming\",\"Events\"]}],\"recommendedFeatures\":[],\"requestedFeatures\":[\"voice channels\",\"ticket channel\",\"tournaments\",\"content sharing\",\"announcements\",\"team areas\",\"staff applications\"],\"skippedFeatures\":[],\"roles\":[{\"name\":\"👑 Owner\",\"purpose\":\"Server owner identity; no additional permissions are assigned automatically.\",\"color\":15844367,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"owner\",\"recommended\":false,\"explicitlyRequested\":false},{\"name\":\"🎮 Member\",\"purpose\":\"Normal community member access.\",\"color\":9807270,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"member\",\"recommended\":true,\"explicitlyRequested\":true},{\"name\":\"🔨 Moderator\",\"purpose\":\"Moderation tools without server-wide administration.\",\"color\":15105570,\"permissions\":[\"KickMembers\",\"BanMembers\",\"ManageMessages\",\"ModerateMembers\"],\"permissionsValue\":\"1099511635974\",\"kind\":\"staff\",\"recommended\":false,\"explicitlyRequested\":false}],\"rules\":[]},\"outputShape\":\"Return a SetupPlan-shaped JSON object with type, description, categories, voiceCategories, recommendedFeatures, requestedFeatures, skippedFeatures, roles, and rules (3-5 short strings, or [] when there is no rules channel). Treat fallbackPlan as a reference for explicit intent and safe defaults, not a required template. Never add known channels merely because they occur in fallbackPlan.\"}"
+          }
+        },
+        {
+          "requestNumber": 4,
+          "status": 429,
+          "latencyMs": 106,
+          "outcome": "rate_limited",
+          "error": "HTTP 429 rate limited.",
+          "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+          "request": {
+            "model": "google/gemma-4-26b-a4b-it:free",
+            "temperature": 0.2,
+            "responseFormat": {
+              "type": "json_object"
+            },
+            "systemPrompt": "Plan a Discord community based on the original brief, which is the primary source of truth. Priority order: explicit user requirements and exclusions; strongly implied requirements; size, tone, and context; selected server type and templates; generic defaults. A lower priority must never override a higher one. Treat templates as optional suggestions, never mandatory channels. Respect negation, including informal wording. Do not create support or ticket infrastructure unless requested; \"no tickets\" excludes both tickets and support unless support is separately requested. When support tickets are requested, do not add a redundant general support channel unless the user asks for one separately. A teams area does not imply player recruitment; add recruitment, tryout, or player application channels only when those are explicitly requested. Do not invent monetisation or membership tiers such as VIP, paid roles, donations, supporters, boosters, or sponsorships without evidence in the brief. An occasional community event means one simple events channel, not tournaments, teams, or event staff. Create tournament infrastructure only when tournaments/competitive organisation is requested. A mentioned game permits channels only for that named game; never add unrelated games. A build showcase is one focused channel, not generic media, clips, or creator infrastructure. \"Only these channels\" or \"nothing else\" means exactly those requested channels (plus the requested voice channels), without defaults. For small groups, private/friend servers, casual/chill tone, or minimal language, keep the structure lightweight and roles limited; scale complexity with stated membership and organisational needs. Do not invent roles or channels from type alone. Reflect tone naturally without slogans. Include a rules channel only when requested or genuinely suitable as a small baseline; when present, provide 3-5 concise community-specific rules, each under 160 characters, with no duplicates, contradictions, niche invented policies, or filler. If no rules channel is planned, rules must be []. Return exactly the SetupPlan shape and preserve type and description. Never include executable actions, permission overwrites, or Administrator permissions.",
+            "userPayload": "{\"selectedType\":\"Gaming\",\"description\":\"I need a professional public Minecraft Discord for around 2,000 members. We run weekly tournaments, have a staff team, need applications, support tickets, announcements, several voice channels, a media section and team areas.\",\"intent\":{\"approximateSize\":0,\"scale\":\"small\",\"tone\":\"professional\",\"moderationPreference\":\"unspecified\",\"requestedFeatures\":[\"voice\",\"support\",\"tickets\",\"tournaments\",\"media\",\"announcements\",\"teams\",\"applications\"],\"excludedFeatures\":[],\"requestedChannels\":[\"voice\",\"tournaments\",\"announcements\",\"tickets\",\"support\",\"staff-applications\"],\"excludedChannels\":[],\"playerRecruitmentRequested\":false,\"separateSupportChannelRequested\":false,\"gameNames\":[\"minecraft\"],\"onlyRequestedFeatures\":false,\"minimal\":false,\"rulesPreference\":\"unspecified\",\"voiceChannelCount\":3},\"fallbackPlan\":{\"type\":\"Gaming\",\"description\":\"I need a professional public Minecraft Discord for around 2,000 members. We run weekly tournaments, have a staff team, need applications, support tickets, announcements, several voice channels, a media section and team areas.\",\"categories\":[{\"name\":\"💬 COMMUNITY\",\"channels\":[\"general\"]},{\"name\":\"🏆 TOURNAMENTS\",\"channels\":[\"tournaments\"]},{\"name\":\"📢 INFORMATION\",\"channels\":[\"announcements\"]},{\"name\":\"🛠️ SUPPORT\",\"channels\":[\"tickets\"]},{\"name\":\"🛠️ STAFF\",\"channels\":[\"staff-applications\"]},{\"name\":\"🎮 MINECRAFT\",\"channels\":[\"minecraft-chat\"]},{\"name\":\"🎬 CONTENT\",\"channels\":[\"content-discussion\",\"feedback\",\"video-sharing\"]},{\"name\":\"🏆 COMPETITION\",\"channels\":[\"teams\"]}],\"voiceCategories\":[{\"name\":\"🔊 VOICE\",\"channels\":[\"General\",\"Gaming\",\"Events\"]}],\"recommendedFeatures\":[],\"requestedFeatures\":[\"voice channels\",\"ticket channel\",\"tournaments\",\"content sharing\",\"announcements\",\"team areas\",\"staff applications\"],\"skippedFeatures\":[],\"roles\":[{\"name\":\"👑 Owner\",\"purpose\":\"Server owner identity; no additional permissions are assigned automatically.\",\"color\":15844367,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"owner\",\"recommended\":false,\"explicitlyRequested\":false},{\"name\":\"🎮 Member\",\"purpose\":\"Normal community member access.\",\"color\":9807270,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"member\",\"recommended\":true,\"explicitlyRequested\":true},{\"name\":\"🔨 Moderator\",\"purpose\":\"Moderation tools without server-wide administration.\",\"color\":15105570,\"permissions\":[\"KickMembers\",\"BanMembers\",\"ManageMessages\",\"ModerateMembers\"],\"permissionsValue\":\"1099511635974\",\"kind\":\"staff\",\"recommended\":false,\"explicitlyRequested\":false}],\"rules\":[]},\"outputShape\":\"Return a SetupPlan-shaped JSON object with type, description, categories, voiceCategories, recommendedFeatures, requestedFeatures, skippedFeatures, roles, and rules (3-5 short strings, or [] when there is no rules channel). Treat fallbackPlan as a reference for explicit intent and safe defaults, not a required template. Never add known channels merely because they occur in fallbackPlan.\"}"
+          }
+        }
+      ],
+      "status": "rate_limited",
+      "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+      "validJson": null,
+      "schemaValidation": "not-run",
+      "validationErrors": [],
+      "fallbackResult": {
+        "type": "Gaming",
+        "description": "I need a professional public Minecraft Discord for around 2,000 members. We run weekly tournaments, have a staff team, need applications, support tickets, announcements, several voice channels, a media section and team areas.",
+        "categories": [
+          {
+            "name": "💬 COMMUNITY",
+            "channels": [
+              "general"
+            ]
+          },
+          {
+            "name": "🏆 TOURNAMENTS",
+            "channels": [
+              "tournaments"
+            ]
+          },
+          {
+            "name": "📢 INFORMATION",
+            "channels": [
+              "announcements"
+            ]
+          },
+          {
+            "name": "🛠️ SUPPORT",
+            "channels": [
+              "tickets"
+            ]
+          },
+          {
+            "name": "🛠️ STAFF",
+            "channels": [
+              "staff-applications"
+            ]
+          },
+          {
+            "name": "🎮 MINECRAFT",
+            "channels": [
+              "minecraft-chat"
+            ]
+          },
+          {
+            "name": "🎬 CONTENT",
+            "channels": [
+              "content-discussion",
+              "feedback",
+              "video-sharing"
+            ]
+          },
+          {
+            "name": "🏆 COMPETITION",
+            "channels": [
+              "teams"
+            ]
+          }
+        ],
+        "voiceCategories": [
+          {
+            "name": "🔊 VOICE",
+            "channels": [
+              "General",
+              "Gaming",
+              "Events"
+            ]
+          }
+        ],
+        "recommendedFeatures": [],
+        "requestedFeatures": [
+          "voice channels",
+          "ticket channel",
+          "tournaments",
+          "content sharing",
+          "announcements",
+          "team areas",
+          "staff applications"
+        ],
+        "skippedFeatures": [],
+        "roles": [
+          {
+            "name": "👑 Owner",
+            "purpose": "Server owner identity; no additional permissions are assigned automatically.",
+            "color": 15844367,
+            "permissions": [],
+            "permissionsValue": "0",
+            "kind": "owner",
+            "recommended": false,
+            "explicitlyRequested": false
+          },
+          {
+            "name": "🎮 Member",
+            "purpose": "Normal community member access.",
+            "color": 9807270,
+            "permissions": [],
+            "permissionsValue": "0",
+            "kind": "member",
+            "recommended": true,
+            "explicitlyRequested": true
+          },
+          {
+            "name": "🔨 Moderator",
+            "purpose": "Moderation tools without server-wide administration.",
+            "color": 15105570,
+            "permissions": [
+              "KickMembers",
+              "BanMembers",
+              "ManageMessages",
+              "ModerateMembers"
+            ],
+            "permissionsValue": "1099511635974",
+            "kind": "staff",
+            "recommended": false,
+            "explicitlyRequested": false
+          }
+        ],
+        "rules": []
+      },
+      "fallbackLabel": "FALLBACK",
+      "notes": [
+        "Both the original request and one retry returned HTTP 429; the model returned no proposal, so understanding, correctness, proportionality, and hallucinations cannot be assessed."
+      ]
+    },
+    {
+      "promptId": 3,
+      "label": "Explicit exclusions",
+      "prompt": "Make me a gaming community server for around 100 people. We mainly play Minecraft and Rocket League. We want general chat, game channels, voice channels and occasional events. Do not add tickets, applications, staff recruitment, economy systems or premium/VIP roles.",
+      "attempts": [
+        {
+          "requestNumber": 5,
+          "status": 429,
+          "latencyMs": 66,
+          "outcome": "rate_limited",
+          "error": "HTTP 429 rate limited.",
+          "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+          "request": {
+            "model": "google/gemma-4-26b-a4b-it:free",
+            "temperature": 0.2,
+            "responseFormat": {
+              "type": "json_object"
+            },
+            "systemPrompt": "Plan a Discord community based on the original brief, which is the primary source of truth. Priority order: explicit user requirements and exclusions; strongly implied requirements; size, tone, and context; selected server type and templates; generic defaults. A lower priority must never override a higher one. Treat templates as optional suggestions, never mandatory channels. Respect negation, including informal wording. Do not create support or ticket infrastructure unless requested; \"no tickets\" excludes both tickets and support unless support is separately requested. When support tickets are requested, do not add a redundant general support channel unless the user asks for one separately. A teams area does not imply player recruitment; add recruitment, tryout, or player application channels only when those are explicitly requested. Do not invent monetisation or membership tiers such as VIP, paid roles, donations, supporters, boosters, or sponsorships without evidence in the brief. An occasional community event means one simple events channel, not tournaments, teams, or event staff. Create tournament infrastructure only when tournaments/competitive organisation is requested. A mentioned game permits channels only for that named game; never add unrelated games. A build showcase is one focused channel, not generic media, clips, or creator infrastructure. \"Only these channels\" or \"nothing else\" means exactly those requested channels (plus the requested voice channels), without defaults. For small groups, private/friend servers, casual/chill tone, or minimal language, keep the structure lightweight and roles limited; scale complexity with stated membership and organisational needs. Do not invent roles or channels from type alone. Reflect tone naturally without slogans. Include a rules channel only when requested or genuinely suitable as a small baseline; when present, provide 3-5 concise community-specific rules, each under 160 characters, with no duplicates, contradictions, niche invented policies, or filler. If no rules channel is planned, rules must be []. Return exactly the SetupPlan shape and preserve type and description. Never include executable actions, permission overwrites, or Administrator permissions.",
+            "userPayload": "{\"selectedType\":\"Gaming\",\"description\":\"Make me a gaming community server for around 100 people. We mainly play Minecraft and Rocket League. We want general chat, game channels, voice channels and occasional events. Do not add tickets, applications, staff recruitment, economy systems or premium/VIP roles.\",\"intent\":{\"approximateSize\":100,\"scale\":\"medium\",\"moderationPreference\":\"unspecified\",\"requestedFeatures\":[\"voice\",\"events\",\"general\",\"vip\",\"trading\",\"applications\"],\"excludedFeatures\":[\"tickets\"],\"requestedChannels\":[\"general\",\"voice\",\"events\",\"staff-applications\"],\"excludedChannels\":[\"tickets\"],\"playerRecruitmentRequested\":false,\"separateSupportChannelRequested\":false,\"gameNames\":[\"minecraft\",\"rocket-league\"],\"onlyRequestedFeatures\":false,\"minimal\":false,\"rulesPreference\":\"unspecified\"},\"fallbackPlan\":{\"type\":\"Gaming\",\"description\":\"Make me a gaming community server for around 100 people. We mainly play Minecraft and Rocket League. We want general chat, game channels, voice channels and occasional events. Do not add tickets, applications, staff recruitment, economy systems or premium/VIP roles.\",\"categories\":[{\"name\":\"💬 COMMUNITY\",\"channels\":[\"general\"]},{\"name\":\"📅 EVENTS\",\"channels\":[\"events\"]},{\"name\":\"🛠️ STAFF\",\"channels\":[\"staff-applications\"]},{\"name\":\"🎮 MINECRAFT\",\"channels\":[\"minecraft-chat\"]},{\"name\":\"🎮 GAMES\",\"channels\":[\"rocket-league-chat\"]},{\"name\":\"⭐ SUPPORTERS\",\"channels\":[\"supporter-chat\"]},{\"name\":\"💱 TRADING\",\"channels\":[\"trading\"]}],\"voiceCategories\":[{\"name\":\"🔊 VOICE\",\"channels\":[\"General\"]}],\"recommendedFeatures\":[],\"requestedFeatures\":[\"voice channels\",\"events\",\"general chat\",\"VIP/supporter area\",\"trading/economy\",\"staff applications\"],\"skippedFeatures\":[\"ticket channel\"],\"roles\":[{\"name\":\"👑 Owner\",\"purpose\":\"Server owner identity; no additional permissions are assigned automatically.\",\"color\":15844367,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"owner\",\"recommended\":false,\"explicitlyRequested\":false},{\"name\":\"🎮 Member\",\"purpose\":\"Normal community member access.\",\"color\":9807270,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"member\",\"recommended\":true,\"explicitlyRequested\":true},{\"name\":\"🔨 Moderator\",\"purpose\":\"Moderation tools without server-wide administration.\",\"color\":15105570,\"permissions\":[\"KickMembers\",\"BanMembers\",\"ManageMessages\",\"ModerateMembers\"],\"permissionsValue\":\"1099511635974\",\"kind\":\"staff\",\"recommended\":false,\"explicitlyRequested\":false},{\"name\":\"⭐ VIP\",\"purpose\":\"Identify VIP or supporter members; no dangerous permissions.\",\"color\":15965202,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"vip\",\"recommended\":false,\"explicitlyRequested\":true}],\"rules\":[]},\"outputShape\":\"Return a SetupPlan-shaped JSON object with type, description, categories, voiceCategories, recommendedFeatures, requestedFeatures, skippedFeatures, roles, and rules (3-5 short strings, or [] when there is no rules channel). Treat fallbackPlan as a reference for explicit intent and safe defaults, not a required template. Never add known channels merely because they occur in fallbackPlan.\"}"
+          }
+        },
+        {
+          "requestNumber": 6,
+          "status": 429,
+          "latencyMs": 63,
+          "outcome": "rate_limited",
+          "error": "HTTP 429 rate limited.",
+          "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+          "request": {
+            "model": "google/gemma-4-26b-a4b-it:free",
+            "temperature": 0.2,
+            "responseFormat": {
+              "type": "json_object"
+            },
+            "systemPrompt": "Plan a Discord community based on the original brief, which is the primary source of truth. Priority order: explicit user requirements and exclusions; strongly implied requirements; size, tone, and context; selected server type and templates; generic defaults. A lower priority must never override a higher one. Treat templates as optional suggestions, never mandatory channels. Respect negation, including informal wording. Do not create support or ticket infrastructure unless requested; \"no tickets\" excludes both tickets and support unless support is separately requested. When support tickets are requested, do not add a redundant general support channel unless the user asks for one separately. A teams area does not imply player recruitment; add recruitment, tryout, or player application channels only when those are explicitly requested. Do not invent monetisation or membership tiers such as VIP, paid roles, donations, supporters, boosters, or sponsorships without evidence in the brief. An occasional community event means one simple events channel, not tournaments, teams, or event staff. Create tournament infrastructure only when tournaments/competitive organisation is requested. A mentioned game permits channels only for that named game; never add unrelated games. A build showcase is one focused channel, not generic media, clips, or creator infrastructure. \"Only these channels\" or \"nothing else\" means exactly those requested channels (plus the requested voice channels), without defaults. For small groups, private/friend servers, casual/chill tone, or minimal language, keep the structure lightweight and roles limited; scale complexity with stated membership and organisational needs. Do not invent roles or channels from type alone. Reflect tone naturally without slogans. Include a rules channel only when requested or genuinely suitable as a small baseline; when present, provide 3-5 concise community-specific rules, each under 160 characters, with no duplicates, contradictions, niche invented policies, or filler. If no rules channel is planned, rules must be []. Return exactly the SetupPlan shape and preserve type and description. Never include executable actions, permission overwrites, or Administrator permissions.",
+            "userPayload": "{\"selectedType\":\"Gaming\",\"description\":\"Make me a gaming community server for around 100 people. We mainly play Minecraft and Rocket League. We want general chat, game channels, voice channels and occasional events. Do not add tickets, applications, staff recruitment, economy systems or premium/VIP roles.\",\"intent\":{\"approximateSize\":100,\"scale\":\"medium\",\"moderationPreference\":\"unspecified\",\"requestedFeatures\":[\"voice\",\"events\",\"general\",\"vip\",\"trading\",\"applications\"],\"excludedFeatures\":[\"tickets\"],\"requestedChannels\":[\"general\",\"voice\",\"events\",\"staff-applications\"],\"excludedChannels\":[\"tickets\"],\"playerRecruitmentRequested\":false,\"separateSupportChannelRequested\":false,\"gameNames\":[\"minecraft\",\"rocket-league\"],\"onlyRequestedFeatures\":false,\"minimal\":false,\"rulesPreference\":\"unspecified\"},\"fallbackPlan\":{\"type\":\"Gaming\",\"description\":\"Make me a gaming community server for around 100 people. We mainly play Minecraft and Rocket League. We want general chat, game channels, voice channels and occasional events. Do not add tickets, applications, staff recruitment, economy systems or premium/VIP roles.\",\"categories\":[{\"name\":\"💬 COMMUNITY\",\"channels\":[\"general\"]},{\"name\":\"📅 EVENTS\",\"channels\":[\"events\"]},{\"name\":\"🛠️ STAFF\",\"channels\":[\"staff-applications\"]},{\"name\":\"🎮 MINECRAFT\",\"channels\":[\"minecraft-chat\"]},{\"name\":\"🎮 GAMES\",\"channels\":[\"rocket-league-chat\"]},{\"name\":\"⭐ SUPPORTERS\",\"channels\":[\"supporter-chat\"]},{\"name\":\"💱 TRADING\",\"channels\":[\"trading\"]}],\"voiceCategories\":[{\"name\":\"🔊 VOICE\",\"channels\":[\"General\"]}],\"recommendedFeatures\":[],\"requestedFeatures\":[\"voice channels\",\"events\",\"general chat\",\"VIP/supporter area\",\"trading/economy\",\"staff applications\"],\"skippedFeatures\":[\"ticket channel\"],\"roles\":[{\"name\":\"👑 Owner\",\"purpose\":\"Server owner identity; no additional permissions are assigned automatically.\",\"color\":15844367,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"owner\",\"recommended\":false,\"explicitlyRequested\":false},{\"name\":\"🎮 Member\",\"purpose\":\"Normal community member access.\",\"color\":9807270,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"member\",\"recommended\":true,\"explicitlyRequested\":true},{\"name\":\"🔨 Moderator\",\"purpose\":\"Moderation tools without server-wide administration.\",\"color\":15105570,\"permissions\":[\"KickMembers\",\"BanMembers\",\"ManageMessages\",\"ModerateMembers\"],\"permissionsValue\":\"1099511635974\",\"kind\":\"staff\",\"recommended\":false,\"explicitlyRequested\":false},{\"name\":\"⭐ VIP\",\"purpose\":\"Identify VIP or supporter members; no dangerous permissions.\",\"color\":15965202,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"vip\",\"recommended\":false,\"explicitlyRequested\":true}],\"rules\":[]},\"outputShape\":\"Return a SetupPlan-shaped JSON object with type, description, categories, voiceCategories, recommendedFeatures, requestedFeatures, skippedFeatures, roles, and rules (3-5 short strings, or [] when there is no rules channel). Treat fallbackPlan as a reference for explicit intent and safe defaults, not a required template. Never add known channels merely because they occur in fallbackPlan.\"}"
+          }
+        }
+      ],
+      "status": "rate_limited",
+      "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+      "validJson": null,
+      "schemaValidation": "not-run",
+      "validationErrors": [],
+      "fallbackResult": {
+        "type": "Gaming",
+        "description": "Make me a gaming community server for around 100 people. We mainly play Minecraft and Rocket League. We want general chat, game channels, voice channels and occasional events. Do not add tickets, applications, staff recruitment, economy systems or premium/VIP roles.",
+        "categories": [
+          {
+            "name": "💬 COMMUNITY",
+            "channels": [
+              "general"
+            ]
+          },
+          {
+            "name": "📅 EVENTS",
+            "channels": [
+              "events"
+            ]
+          },
+          {
+            "name": "🛠️ STAFF",
+            "channels": [
+              "staff-applications"
+            ]
+          },
+          {
+            "name": "🎮 MINECRAFT",
+            "channels": [
+              "minecraft-chat"
+            ]
+          },
+          {
+            "name": "🎮 GAMES",
+            "channels": [
+              "rocket-league-chat"
+            ]
+          },
+          {
+            "name": "⭐ SUPPORTERS",
+            "channels": [
+              "supporter-chat"
+            ]
+          },
+          {
+            "name": "💱 TRADING",
+            "channels": [
+              "trading"
+            ]
+          }
+        ],
+        "voiceCategories": [
+          {
+            "name": "🔊 VOICE",
+            "channels": [
+              "General"
+            ]
+          }
+        ],
+        "recommendedFeatures": [],
+        "requestedFeatures": [
+          "voice channels",
+          "events",
+          "general chat",
+          "VIP/supporter area",
+          "trading/economy",
+          "staff applications"
+        ],
+        "skippedFeatures": [
+          "ticket channel"
+        ],
+        "roles": [
+          {
+            "name": "👑 Owner",
+            "purpose": "Server owner identity; no additional permissions are assigned automatically.",
+            "color": 15844367,
+            "permissions": [],
+            "permissionsValue": "0",
+            "kind": "owner",
+            "recommended": false,
+            "explicitlyRequested": false
+          },
+          {
+            "name": "🎮 Member",
+            "purpose": "Normal community member access.",
+            "color": 9807270,
+            "permissions": [],
+            "permissionsValue": "0",
+            "kind": "member",
+            "recommended": true,
+            "explicitlyRequested": true
+          },
+          {
+            "name": "🔨 Moderator",
+            "purpose": "Moderation tools without server-wide administration.",
+            "color": 15105570,
+            "permissions": [
+              "KickMembers",
+              "BanMembers",
+              "ManageMessages",
+              "ModerateMembers"
+            ],
+            "permissionsValue": "1099511635974",
+            "kind": "staff",
+            "recommended": false,
+            "explicitlyRequested": false
+          },
+          {
+            "name": "⭐ VIP",
+            "purpose": "Identify VIP or supporter members; no dangerous permissions.",
+            "color": 15965202,
+            "permissions": [],
+            "permissionsValue": "0",
+            "kind": "vip",
+            "recommended": false,
+            "explicitlyRequested": true
+          }
+        ],
+        "rules": []
+      },
+      "fallbackLabel": "FALLBACK",
+      "notes": [
+        "Both the original request and one retry returned HTTP 429; the model returned no proposal, so understanding, correctness, proportionality, and hallucinations cannot be assessed."
+      ]
+    },
+    {
+      "promptId": 4,
+      "label": "Messy natural language",
+      "prompt": "yo basically me and a bunch of people are making a server, probably like 60 or 70 people, we play minecraft mostly but sometimes other stuff too. want it to feel active but not like one of those huge public servers. probably need chat, some vcs, somewhere for screenshots/builds and maybe events. don't overdo it",
+      "attempts": [
+        {
+          "requestNumber": 7,
+          "status": 429,
+          "latencyMs": 79,
+          "outcome": "rate_limited",
+          "error": "HTTP 429 rate limited.",
+          "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+          "request": {
+            "model": "google/gemma-4-26b-a4b-it:free",
+            "temperature": 0.2,
+            "responseFormat": {
+              "type": "json_object"
+            },
+            "systemPrompt": "Plan a Discord community based on the original brief, which is the primary source of truth. Priority order: explicit user requirements and exclusions; strongly implied requirements; size, tone, and context; selected server type and templates; generic defaults. A lower priority must never override a higher one. Treat templates as optional suggestions, never mandatory channels. Respect negation, including informal wording. Do not create support or ticket infrastructure unless requested; \"no tickets\" excludes both tickets and support unless support is separately requested. When support tickets are requested, do not add a redundant general support channel unless the user asks for one separately. A teams area does not imply player recruitment; add recruitment, tryout, or player application channels only when those are explicitly requested. Do not invent monetisation or membership tiers such as VIP, paid roles, donations, supporters, boosters, or sponsorships without evidence in the brief. An occasional community event means one simple events channel, not tournaments, teams, or event staff. Create tournament infrastructure only when tournaments/competitive organisation is requested. A mentioned game permits channels only for that named game; never add unrelated games. A build showcase is one focused channel, not generic media, clips, or creator infrastructure. \"Only these channels\" or \"nothing else\" means exactly those requested channels (plus the requested voice channels), without defaults. For small groups, private/friend servers, casual/chill tone, or minimal language, keep the structure lightweight and roles limited; scale complexity with stated membership and organisational needs. Do not invent roles or channels from type alone. Reflect tone naturally without slogans. Include a rules channel only when requested or genuinely suitable as a small baseline; when present, provide 3-5 concise community-specific rules, each under 160 characters, with no duplicates, contradictions, niche invented policies, or filler. If no rules channel is planned, rules must be []. Return exactly the SetupPlan shape and preserve type and description. Never include executable actions, permission overwrites, or Administrator permissions.",
+            "userPayload": "{\"selectedType\":\"Gaming\",\"description\":\"yo basically me and a bunch of people are making a server, probably like 60 or 70 people, we play minecraft mostly but sometimes other stuff too. want it to feel active but not like one of those huge public servers. probably need chat, some vcs, somewhere for screenshots/builds and maybe events. don't overdo it\",\"intent\":{\"approximateSize\":70,\"scale\":\"medium\",\"moderationPreference\":\"unspecified\",\"requestedFeatures\":[\"events\",\"build-showcase\",\"general\"],\"excludedFeatures\":[],\"requestedChannels\":[\"build-showcase\",\"events\"],\"excludedChannels\":[],\"playerRecruitmentRequested\":false,\"separateSupportChannelRequested\":false,\"gameNames\":[\"minecraft\"],\"onlyRequestedFeatures\":false,\"minimal\":true,\"rulesPreference\":\"unspecified\"},\"fallbackPlan\":{\"type\":\"Gaming\",\"description\":\"yo basically me and a bunch of people are making a server, probably like 60 or 70 people, we play minecraft mostly but sometimes other stuff too. want it to feel active but not like one of those huge public servers. probably need chat, some vcs, somewhere for screenshots/builds and maybe events. don't overdo it\",\"categories\":[{\"name\":\"💬 COMMUNITY\",\"channels\":[\"general\"]},{\"name\":\"🎮 MINECRAFT\",\"channels\":[\"build-showcase\",\"minecraft-chat\"]},{\"name\":\"📅 EVENTS\",\"channels\":[\"events\"]}],\"voiceCategories\":[],\"recommendedFeatures\":[],\"requestedFeatures\":[\"events\",\"build showcase\",\"general chat\"],\"skippedFeatures\":[],\"roles\":[{\"name\":\"👑 Owner\",\"purpose\":\"Server owner identity; no additional permissions are assigned automatically.\",\"color\":15844367,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"owner\",\"recommended\":false,\"explicitlyRequested\":false},{\"name\":\"🎮 Member\",\"purpose\":\"Normal community member access.\",\"color\":9807270,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"member\",\"recommended\":true,\"explicitlyRequested\":true}],\"rules\":[]},\"outputShape\":\"Return a SetupPlan-shaped JSON object with type, description, categories, voiceCategories, recommendedFeatures, requestedFeatures, skippedFeatures, roles, and rules (3-5 short strings, or [] when there is no rules channel). Treat fallbackPlan as a reference for explicit intent and safe defaults, not a required template. Never add known channels merely because they occur in fallbackPlan.\"}"
+          }
+        },
+        {
+          "requestNumber": 8,
+          "status": 429,
+          "latencyMs": 115,
+          "outcome": "rate_limited",
+          "error": "HTTP 429 rate limited.",
+          "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+          "request": {
+            "model": "google/gemma-4-26b-a4b-it:free",
+            "temperature": 0.2,
+            "responseFormat": {
+              "type": "json_object"
+            },
+            "systemPrompt": "Plan a Discord community based on the original brief, which is the primary source of truth. Priority order: explicit user requirements and exclusions; strongly implied requirements; size, tone, and context; selected server type and templates; generic defaults. A lower priority must never override a higher one. Treat templates as optional suggestions, never mandatory channels. Respect negation, including informal wording. Do not create support or ticket infrastructure unless requested; \"no tickets\" excludes both tickets and support unless support is separately requested. When support tickets are requested, do not add a redundant general support channel unless the user asks for one separately. A teams area does not imply player recruitment; add recruitment, tryout, or player application channels only when those are explicitly requested. Do not invent monetisation or membership tiers such as VIP, paid roles, donations, supporters, boosters, or sponsorships without evidence in the brief. An occasional community event means one simple events channel, not tournaments, teams, or event staff. Create tournament infrastructure only when tournaments/competitive organisation is requested. A mentioned game permits channels only for that named game; never add unrelated games. A build showcase is one focused channel, not generic media, clips, or creator infrastructure. \"Only these channels\" or \"nothing else\" means exactly those requested channels (plus the requested voice channels), without defaults. For small groups, private/friend servers, casual/chill tone, or minimal language, keep the structure lightweight and roles limited; scale complexity with stated membership and organisational needs. Do not invent roles or channels from type alone. Reflect tone naturally without slogans. Include a rules channel only when requested or genuinely suitable as a small baseline; when present, provide 3-5 concise community-specific rules, each under 160 characters, with no duplicates, contradictions, niche invented policies, or filler. If no rules channel is planned, rules must be []. Return exactly the SetupPlan shape and preserve type and description. Never include executable actions, permission overwrites, or Administrator permissions.",
+            "userPayload": "{\"selectedType\":\"Gaming\",\"description\":\"yo basically me and a bunch of people are making a server, probably like 60 or 70 people, we play minecraft mostly but sometimes other stuff too. want it to feel active but not like one of those huge public servers. probably need chat, some vcs, somewhere for screenshots/builds and maybe events. don't overdo it\",\"intent\":{\"approximateSize\":70,\"scale\":\"medium\",\"moderationPreference\":\"unspecified\",\"requestedFeatures\":[\"events\",\"build-showcase\",\"general\"],\"excludedFeatures\":[],\"requestedChannels\":[\"build-showcase\",\"events\"],\"excludedChannels\":[],\"playerRecruitmentRequested\":false,\"separateSupportChannelRequested\":false,\"gameNames\":[\"minecraft\"],\"onlyRequestedFeatures\":false,\"minimal\":true,\"rulesPreference\":\"unspecified\"},\"fallbackPlan\":{\"type\":\"Gaming\",\"description\":\"yo basically me and a bunch of people are making a server, probably like 60 or 70 people, we play minecraft mostly but sometimes other stuff too. want it to feel active but not like one of those huge public servers. probably need chat, some vcs, somewhere for screenshots/builds and maybe events. don't overdo it\",\"categories\":[{\"name\":\"💬 COMMUNITY\",\"channels\":[\"general\"]},{\"name\":\"🎮 MINECRAFT\",\"channels\":[\"build-showcase\",\"minecraft-chat\"]},{\"name\":\"📅 EVENTS\",\"channels\":[\"events\"]}],\"voiceCategories\":[],\"recommendedFeatures\":[],\"requestedFeatures\":[\"events\",\"build showcase\",\"general chat\"],\"skippedFeatures\":[],\"roles\":[{\"name\":\"👑 Owner\",\"purpose\":\"Server owner identity; no additional permissions are assigned automatically.\",\"color\":15844367,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"owner\",\"recommended\":false,\"explicitlyRequested\":false},{\"name\":\"🎮 Member\",\"purpose\":\"Normal community member access.\",\"color\":9807270,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"member\",\"recommended\":true,\"explicitlyRequested\":true}],\"rules\":[]},\"outputShape\":\"Return a SetupPlan-shaped JSON object with type, description, categories, voiceCategories, recommendedFeatures, requestedFeatures, skippedFeatures, roles, and rules (3-5 short strings, or [] when there is no rules channel). Treat fallbackPlan as a reference for explicit intent and safe defaults, not a required template. Never add known channels merely because they occur in fallbackPlan.\"}"
+          }
+        }
+      ],
+      "status": "rate_limited",
+      "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+      "validJson": null,
+      "schemaValidation": "not-run",
+      "validationErrors": [],
+      "fallbackResult": {
+        "type": "Gaming",
+        "description": "yo basically me and a bunch of people are making a server, probably like 60 or 70 people, we play minecraft mostly but sometimes other stuff too. want it to feel active but not like one of those huge public servers. probably need chat, some vcs, somewhere for screenshots/builds and maybe events. don't overdo it",
+        "categories": [
+          {
+            "name": "💬 COMMUNITY",
+            "channels": [
+              "general"
+            ]
+          },
+          {
+            "name": "🎮 MINECRAFT",
+            "channels": [
+              "build-showcase",
+              "minecraft-chat"
+            ]
+          },
+          {
+            "name": "📅 EVENTS",
+            "channels": [
+              "events"
+            ]
+          }
+        ],
+        "voiceCategories": [],
+        "recommendedFeatures": [],
+        "requestedFeatures": [
+          "events",
+          "build showcase",
+          "general chat"
+        ],
+        "skippedFeatures": [],
+        "roles": [
+          {
+            "name": "👑 Owner",
+            "purpose": "Server owner identity; no additional permissions are assigned automatically.",
+            "color": 15844367,
+            "permissions": [],
+            "permissionsValue": "0",
+            "kind": "owner",
+            "recommended": false,
+            "explicitlyRequested": false
+          },
+          {
+            "name": "🎮 Member",
+            "purpose": "Normal community member access.",
+            "color": 9807270,
+            "permissions": [],
+            "permissionsValue": "0",
+            "kind": "member",
+            "recommended": true,
+            "explicitlyRequested": true
+          }
+        ],
+        "rules": []
+      },
+      "fallbackLabel": "FALLBACK",
+      "notes": [
+        "Both the original request and one retry returned HTTP 429; the model returned no proposal, so understanding, correctness, proportionality, and hallucinations cannot be assessed."
+      ]
+    },
+    {
+      "promptId": 5,
+      "label": "Events but not tournaments",
+      "prompt": "We have a 150-member community. We sometimes run community events like movie nights, game nights and Q&As. We need an events area and announcements, but we are NOT a competitive gaming server and do not need tournaments, teams or player recruitment.",
+      "attempts": [
+        {
+          "requestNumber": 9,
+          "status": 429,
+          "latencyMs": 239,
+          "outcome": "rate_limited",
+          "error": "HTTP 429 rate limited.",
+          "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+          "request": {
+            "model": "google/gemma-4-26b-a4b-it:free",
+            "temperature": 0.2,
+            "responseFormat": {
+              "type": "json_object"
+            },
+            "systemPrompt": "Plan a Discord community based on the original brief, which is the primary source of truth. Priority order: explicit user requirements and exclusions; strongly implied requirements; size, tone, and context; selected server type and templates; generic defaults. A lower priority must never override a higher one. Treat templates as optional suggestions, never mandatory channels. Respect negation, including informal wording. Do not create support or ticket infrastructure unless requested; \"no tickets\" excludes both tickets and support unless support is separately requested. When support tickets are requested, do not add a redundant general support channel unless the user asks for one separately. A teams area does not imply player recruitment; add recruitment, tryout, or player application channels only when those are explicitly requested. Do not invent monetisation or membership tiers such as VIP, paid roles, donations, supporters, boosters, or sponsorships without evidence in the brief. An occasional community event means one simple events channel, not tournaments, teams, or event staff. Create tournament infrastructure only when tournaments/competitive organisation is requested. A mentioned game permits channels only for that named game; never add unrelated games. A build showcase is one focused channel, not generic media, clips, or creator infrastructure. \"Only these channels\" or \"nothing else\" means exactly those requested channels (plus the requested voice channels), without defaults. For small groups, private/friend servers, casual/chill tone, or minimal language, keep the structure lightweight and roles limited; scale complexity with stated membership and organisational needs. Do not invent roles or channels from type alone. Reflect tone naturally without slogans. Include a rules channel only when requested or genuinely suitable as a small baseline; when present, provide 3-5 concise community-specific rules, each under 160 characters, with no duplicates, contradictions, niche invented policies, or filler. If no rules channel is planned, rules must be []. Return exactly the SetupPlan shape and preserve type and description. Never include executable actions, permission overwrites, or Administrator permissions.",
+            "userPayload": "{\"selectedType\":\"Community\",\"description\":\"We have a 150-member community. We sometimes run community events like movie nights, game nights and Q&As. We need an events area and announcements, but we are NOT a competitive gaming server and do not need tournaments, teams or player recruitment.\",\"intent\":{\"scale\":\"unspecified\",\"tone\":\"competitive\",\"moderationPreference\":\"unspecified\",\"requestedFeatures\":[\"events\",\"announcements\",\"teams\"],\"excludedFeatures\":[\"tournaments\"],\"requestedChannels\":[\"events\",\"announcements\"],\"excludedChannels\":[\"tournaments\"],\"playerRecruitmentRequested\":true,\"separateSupportChannelRequested\":false,\"gameNames\":[],\"onlyRequestedFeatures\":false,\"minimal\":false,\"rulesPreference\":\"unspecified\"},\"fallbackPlan\":{\"type\":\"Community\",\"description\":\"We have a 150-member community. We sometimes run community events like movie nights, game nights and Q&As. We need an events area and announcements, but we are NOT a competitive gaming server and do not need tournaments, teams or player recruitment.\",\"categories\":[{\"name\":\"💬 COMMUNITY\",\"channels\":[\"general\"]},{\"name\":\"📅 EVENTS\",\"channels\":[\"events\"]},{\"name\":\"📢 INFORMATION\",\"channels\":[\"announcements\"]},{\"name\":\"🏆 COMPETITION\",\"channels\":[\"teams\",\"player-recruitment\"]}],\"voiceCategories\":[],\"recommendedFeatures\":[],\"requestedFeatures\":[\"events\",\"announcements\",\"team areas\"],\"skippedFeatures\":[\"tournaments\"],\"roles\":[{\"name\":\"👑 Owner\",\"purpose\":\"Server owner identity; no additional permissions are assigned automatically.\",\"color\":15844367,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"owner\",\"recommended\":false,\"explicitlyRequested\":false},{\"name\":\"🎮 Member\",\"purpose\":\"Normal community member access.\",\"color\":9807270,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"member\",\"recommended\":true,\"explicitlyRequested\":true}],\"rules\":[]},\"outputShape\":\"Return a SetupPlan-shaped JSON object with type, description, categories, voiceCategories, recommendedFeatures, requestedFeatures, skippedFeatures, roles, and rules (3-5 short strings, or [] when there is no rules channel). Treat fallbackPlan as a reference for explicit intent and safe defaults, not a required template. Never add known channels merely because they occur in fallbackPlan.\"}"
+          }
+        },
+        {
+          "requestNumber": 10,
+          "status": 429,
+          "latencyMs": 119,
+          "outcome": "rate_limited",
+          "error": "HTTP 429 rate limited.",
+          "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+          "request": {
+            "model": "google/gemma-4-26b-a4b-it:free",
+            "temperature": 0.2,
+            "responseFormat": {
+              "type": "json_object"
+            },
+            "systemPrompt": "Plan a Discord community based on the original brief, which is the primary source of truth. Priority order: explicit user requirements and exclusions; strongly implied requirements; size, tone, and context; selected server type and templates; generic defaults. A lower priority must never override a higher one. Treat templates as optional suggestions, never mandatory channels. Respect negation, including informal wording. Do not create support or ticket infrastructure unless requested; \"no tickets\" excludes both tickets and support unless support is separately requested. When support tickets are requested, do not add a redundant general support channel unless the user asks for one separately. A teams area does not imply player recruitment; add recruitment, tryout, or player application channels only when those are explicitly requested. Do not invent monetisation or membership tiers such as VIP, paid roles, donations, supporters, boosters, or sponsorships without evidence in the brief. An occasional community event means one simple events channel, not tournaments, teams, or event staff. Create tournament infrastructure only when tournaments/competitive organisation is requested. A mentioned game permits channels only for that named game; never add unrelated games. A build showcase is one focused channel, not generic media, clips, or creator infrastructure. \"Only these channels\" or \"nothing else\" means exactly those requested channels (plus the requested voice channels), without defaults. For small groups, private/friend servers, casual/chill tone, or minimal language, keep the structure lightweight and roles limited; scale complexity with stated membership and organisational needs. Do not invent roles or channels from type alone. Reflect tone naturally without slogans. Include a rules channel only when requested or genuinely suitable as a small baseline; when present, provide 3-5 concise community-specific rules, each under 160 characters, with no duplicates, contradictions, niche invented policies, or filler. If no rules channel is planned, rules must be []. Return exactly the SetupPlan shape and preserve type and description. Never include executable actions, permission overwrites, or Administrator permissions.",
+            "userPayload": "{\"selectedType\":\"Community\",\"description\":\"We have a 150-member community. We sometimes run community events like movie nights, game nights and Q&As. We need an events area and announcements, but we are NOT a competitive gaming server and do not need tournaments, teams or player recruitment.\",\"intent\":{\"scale\":\"unspecified\",\"tone\":\"competitive\",\"moderationPreference\":\"unspecified\",\"requestedFeatures\":[\"events\",\"announcements\",\"teams\"],\"excludedFeatures\":[\"tournaments\"],\"requestedChannels\":[\"events\",\"announcements\"],\"excludedChannels\":[\"tournaments\"],\"playerRecruitmentRequested\":true,\"separateSupportChannelRequested\":false,\"gameNames\":[],\"onlyRequestedFeatures\":false,\"minimal\":false,\"rulesPreference\":\"unspecified\"},\"fallbackPlan\":{\"type\":\"Community\",\"description\":\"We have a 150-member community. We sometimes run community events like movie nights, game nights and Q&As. We need an events area and announcements, but we are NOT a competitive gaming server and do not need tournaments, teams or player recruitment.\",\"categories\":[{\"name\":\"💬 COMMUNITY\",\"channels\":[\"general\"]},{\"name\":\"📅 EVENTS\",\"channels\":[\"events\"]},{\"name\":\"📢 INFORMATION\",\"channels\":[\"announcements\"]},{\"name\":\"🏆 COMPETITION\",\"channels\":[\"teams\",\"player-recruitment\"]}],\"voiceCategories\":[],\"recommendedFeatures\":[],\"requestedFeatures\":[\"events\",\"announcements\",\"team areas\"],\"skippedFeatures\":[\"tournaments\"],\"roles\":[{\"name\":\"👑 Owner\",\"purpose\":\"Server owner identity; no additional permissions are assigned automatically.\",\"color\":15844367,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"owner\",\"recommended\":false,\"explicitlyRequested\":false},{\"name\":\"🎮 Member\",\"purpose\":\"Normal community member access.\",\"color\":9807270,\"permissions\":[],\"permissionsValue\":\"0\",\"kind\":\"member\",\"recommended\":true,\"explicitlyRequested\":true}],\"rules\":[]},\"outputShape\":\"Return a SetupPlan-shaped JSON object with type, description, categories, voiceCategories, recommendedFeatures, requestedFeatures, skippedFeatures, roles, and rules (3-5 short strings, or [] when there is no rules channel). Treat fallbackPlan as a reference for explicit intent and safe defaults, not a required template. Never add known channels merely because they occur in fallbackPlan.\"}"
+          }
+        }
+      ],
+      "status": "rate_limited",
+      "rawResponseText": "{\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per day\",\"code\":429,\"metadata\":{\"headers\":{\"X-RateLimit-Limit\":\"50\",\"X-RateLimit-Remaining\":\"0\",\"X-RateLimit-Reset\":\"1791244800000\"},\"limit_source\":\"openrouter_free_tier_daily\",\"remedy_hint\":\"Wait for the daily reset (see X-RateLimit-Reset), or purchase credits to raise your free-model daily limit.\",\"provider_name\":null}},\"user_id\":\"user_3JyC4ZwZf9jCoyFXoKDJQhzsuuw\"}",
+      "validJson": null,
+      "schemaValidation": "not-run",
+      "validationErrors": [],
+      "fallbackResult": {
+        "type": "Community",
+        "description": "We have a 150-member community. We sometimes run community events like movie nights, game nights and Q&As. We need an events area and announcements, but we are NOT a competitive gaming server and do not need tournaments, teams or player recruitment.",
+        "categories": [
+          {
+            "name": "💬 COMMUNITY",
+            "channels": [
+              "general"
+            ]
+          },
+          {
+            "name": "📅 EVENTS",
+            "channels": [
+              "events"
+            ]
+          },
+          {
+            "name": "📢 INFORMATION",
+            "channels": [
+              "announcements"
+            ]
+          },
+          {
+            "name": "🏆 COMPETITION",
+            "channels": [
+              "teams",
+              "player-recruitment"
+            ]
+          }
+        ],
+        "voiceCategories": [],
+        "recommendedFeatures": [],
+        "requestedFeatures": [
+          "events",
+          "announcements",
+          "team areas"
+        ],
+        "skippedFeatures": [
+          "tournaments"
+        ],
+        "roles": [
+          {
+            "name": "👑 Owner",
+            "purpose": "Server owner identity; no additional permissions are assigned automatically.",
+            "color": 15844367,
+            "permissions": [],
+            "permissionsValue": "0",
+            "kind": "owner",
+            "recommended": false,
+            "explicitlyRequested": false
+          },
+          {
+            "name": "🎮 Member",
+            "purpose": "Normal community member access.",
+            "color": 9807270,
+            "permissions": [],
+            "permissionsValue": "0",
+            "kind": "member",
+            "recommended": true,
+            "explicitlyRequested": true
+          }
+        ],
+        "rules": []
+      },
+      "fallbackLabel": "FALLBACK",
+      "notes": [
+        "Both the original request and one retry returned HTTP 429; the model returned no proposal, so understanding, correctness, proportionality, and hallucinations cannot be assessed."
+      ]
+    }
+  ]
+}

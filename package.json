@@ -1,0 +1,36 @@
+{
+  "name": "serverpilot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "api": "tsx src/api/server.ts",
+    "deploy": "tsx src/deploy-commands.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc && node scripts/copy-dashboard-assets.mjs",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oliverndoukouo-create/ServerPilot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/oliverndoukouo-create/ServerPilot/issues"
+  },
+  "homepage": "https://github.com/oliverndoukouo-create/ServerPilot#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}

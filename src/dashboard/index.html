@@ -14,13 +14,16 @@
     <header class="topbar">
       <a class="brand" href="/" aria-label="ServerPilot home">
         <span class="brand-mark" aria-hidden="true">SP</span>
-        <span>ServerPilot</span>
+        <span class="brand-name">ServerPilot</span>
+        <span class="badge badge-accent">V1</span>
       </a>
       <div class="server-context">
         <label class="visually-hidden" for="server-select">Active Discord server</label>
-        <select id="server-select" disabled>
-          <option>Sign in to select a server</option>
-        </select>
+        <div class="select-wrapper">
+          <select id="server-select" disabled>
+            <option value="">Sign in to select a server</option>
+          </select>
+        </div>
       </div>
       <div class="topbar-actions">
         <label class="visually-hidden" for="theme-select">Color theme</label>
@@ -36,29 +39,33 @@
 
     <main id="main-content">
       <section id="loading-state" class="state-panel" role="status">
-        <span class="status-dot status-dot-info" aria-hidden="true"></span>
-        <p>Checking your ServerPilot session...</p>
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <p>Connecting to ServerPilot session...</p>
       </section>
 
       <section id="auth-state" class="auth-panel" hidden>
         <div class="auth-card">
-          <span class="eyebrow">YOUR COMMUNITY, IN CONTEXT</span>
-          <h1>Run your server with clarity.</h1>
-          <p id="auth-message" class="muted">Sign in with Discord to see servers you are allowed to manage.</p>
-          <a id="login-link" class="button button-primary" href="/api/v1/auth/discord?returnTo=%2F">Continue with Discord</a>
-          <button id="auth-retry" class="button button-quiet" type="button">Retry</button>
+          <span class="eyebrow">DISCORD SAAS DASHBOARD</span>
+          <h1>Manage your server with certainty.</h1>
+          <p id="auth-message" class="muted">Sign in with Discord to view and configure servers where you have Manage Server or Administrator permissions.</p>
+          <div class="auth-actions">
+            <a id="login-link" class="button button-primary" href="/api/v1/auth/discord?returnTo=%2F">Continue with Discord</a>
+            <button id="auth-retry" class="button button-quiet" type="button">Retry</button>
+          </div>
           <p id="auth-error" class="feedback feedback-danger" role="alert" hidden></p>
-          <p class="fine-print">ServerPilot checks your current Discord permissions. A server ID in the browser never grants access.</p>
+          <p class="fine-print">ServerPilot verifies live Discord permissions on every API request. A server ID alone never grants access.</p>
         </div>
       </section>
 
       <section id="dashboard" class="dashboard-layout" hidden>
         <aside class="sidebar">
-          <div class="sidebar-label">WORKSPACE</div>
+          <div class="sidebar-header">
+            <span class="sidebar-label">NAVIGATION</span>
+          </div>
           <nav id="primary-nav" aria-label="Dashboard navigation"></nav>
           <div class="sidebar-footnote">
-            <span class="status-dot status-dot-info" aria-hidden="true"></span>
-            <span>Dashboard foundation</span>
+            <span class="status-dot status-dot-success" aria-hidden="true"></span>
+            <span>ServerPilot V1 API</span>
           </div>
         </aside>
         <div class="page-area">
@@ -68,5 +75,9 @@
         </div>
       </section>
     </main>
+
+    <dialog id="app-dialog" class="app-dialog" aria-modal="true">
+      <div id="dialog-content" class="dialog-content"></div>
+    </dialog>
   </body>
 </html>

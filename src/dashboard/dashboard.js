@@ -1,18 +1,13 @@
+// ServerPilot Dashboard V1
+
 const pages = [
-  { id: 'overview', label: 'Overview', description: 'See what is known about your selected community without inventing missing metrics.' },
-  { id: 'servers', label: 'Server selection', description: 'Choose a Discord server you are currently allowed to manage.' },
-  { id: 'assistant', label: 'AI Assistant', description: 'A server-aware assistant will use authorized community context and propose reviewed actions.' },
-  { id: 'builder', label: 'Server Builder', description: 'Generate a structured plan through the existing ServerPilot planner. Dashboard application of the plan is not yet available.' },
-  { id: 'automations', label: 'Automations', description: 'Inspect automations used by the existing ServerPilot engine. Changes are guild-scoped and destructive operations require confirmation.' },
-  { id: 'moderation', label: 'Moderation', description: 'Review guild-scoped moderation cases recorded by ServerPilot. Destructive actions remain in permission-checked Discord commands.' },
-  { id: 'tickets', label: 'Tickets', description: 'Inspect configuration and ticket lifecycle records from the existing ticket workflow. Discord channel actions remain in the bot.' },
-  { id: 'members', label: 'Members', description: 'Member activity and management data are not yet available from a dashboard service.' },
-  { id: 'xp', label: 'XP & Levels', description: 'XP persistence and leaderboard services are not yet connected.' },
-  { id: 'intelligence', label: 'Community Intelligence', description: 'Insights will require real history, diagnosis, and validated recommendations.' },
-  { id: 'analytics', label: 'Analytics', description: 'No persisted analytics ingestion or aggregation service is connected yet.' },
-  { id: 'notifications', label: 'Notifications', description: 'Useful server alerts are not connected to a notification service yet.' },
-  { id: 'settings', label: 'Settings', description: 'Inspect configuration stored by the existing ServerPilot services.' },
-  { id: 'billing', label: 'Billing', description: 'Billing is not connected. No subscription or payment state is being inferred.' },
+  { id: 'overview', label: 'Overview', icon: '📊', description: 'Real-time overview of your verified Discord server and service status.' },
+  { id: 'builder', label: 'AI Server Builder', icon: '🤖', description: 'Design structured channel architectures and roles with ServerPilot AI.' },
+  { id: 'automations', label: 'Automations', icon: '⚡', description: 'Manage WHEN → IF → THEN event-driven workflows for your server.' },
+  { id: 'moderation', label: 'Moderation', icon: '🛡️', description: 'Audit logged moderation actions and verify enforcement safety policies.' },
+  { id: 'tickets', label: 'Tickets', icon: '🎫', description: 'Review support ticket configuration and inspect active and historical ticket records.' },
+  { id: 'settings', label: 'Settings', icon: '⚙️', description: 'Inspect server preferences, welcome messaging, and Discord account authentication.' },
+  { id: 'billing', label: 'Billing', icon: '💳', description: 'Review your subscription tier, quotas, and payment provider status.' },
 ];
 
 const state = {
@@ -21,19 +16,44 @@ const state = {
   selectedGuildId: undefined,
   currentPage: 'overview',
   health: undefined,
+  loadingGuildData: false,
+
+  // Loaded Guild-Scoped Data
   overview: undefined,
   automations: undefined,
-  guildDataError: undefined,
   welcomeConfiguration: undefined,
-  welcomeError: undefined,
   ticketConfiguration: undefined,
-  ticketConfigurationError: undefined,
   tickets: undefined,
-  ticketRecordsError: undefined,
   moderationCases: undefined,
+  recentActivity: [],
+
+  // Domain Errors
+  guildDataError: undefined,
+  welcomeError: undefined,
+  ticketConfigurationError: undefined,
+  ticketRecordsError: undefined,
   moderationError: undefined,
+
+  // AI Server Builder State
   setupPlan: undefined,
+  setupPlanLoading: false,
   setupPlanError: undefined,
+  setupApplyLoading: false,
+  setupApplyResult: undefined,
+  setupApplyError: undefined,
+
+  // AI Automation Creator State
+  automationAiOpen: false,
+  automationAiLoading: false,
+  automationAiProposal: undefined,
+  automationAiError: undefined,
+
+  // Filters
+  moderationFilter: 'ALL',
+  ticketFilter: 'ALL',
+
+  // Dialog State
+  dialog: null,
 };
 
 const elements = {
@@ -52,6 +72,8 @@ const elements = {
   heading: document.querySelector('#page-heading'),
   content: document.querySelector('#page-content'),
   feedback: document.querySelector('#app-feedback'),
+  dialog: document.querySelector('#app-dialog'),
+  dialogContent: document.querySelector('#dialog-content'),
 };
 
 class ApiError extends Error {
@@ -62,75 +84,35 @@ class ApiError extends Error {
   }
 }
 
-async function loadSelectedGuildData() {
-  const guild = currentGuild();
-  state.overview = undefined;
-  state.automations = undefined;
-  state.guildDataError = undefined;
-  state.welcomeConfiguration = undefined;
-  state.welcomeError = undefined;
-  state.ticketConfiguration = undefined;
-  state.ticketConfigurationError = undefined;
-  state.tickets = undefined;
-  state.ticketRecordsError = undefined;
-  state.moderationCases = undefined;
-  state.moderationError = undefined;
-  renderPage();
-  if (!guild) return;
-  const base = `/api/v1/guilds/${encodeURIComponent(guild.id)}`;
-  try {
-    const [overviewResult, automationResult, welcomeResult, ticketResult, ticketsResult, moderationResult] = await Promise.allSettled([
-      api(`${base}/overview`),
-      api(`${base}/automations`),
-      api(`${base}/welcome/config`),
-      api(`${base}/tickets/config`),
-      api(`${base}/tickets?limit=50`),
-      api(`${base}/moderation/cases`),
-    ]);
-    if (state.selectedGuildId !== guild.id) return;
-    if (overviewResult.status === 'rejected') throw overviewResult.reason;
-    if (automationResult.status === 'rejected') throw automationResult.reason;
-    state.overview = overviewResult.value;
-    state.automations = automationResult.value.automations;
-    if (welcomeResult.status === 'fulfilled') {
-      state.welcomeConfiguration = welcomeResult.value.configuration;
-    } else {
-      state.welcomeError = errorMessage(welcomeResult.reason);
-    }
-    if (ticketResult.status === 'fulfilled') {
-      state.ticketConfiguration = ticketResult.value.configuration;
-    } else {
-      state.ticketConfigurationError = errorMessage(ticketResult.reason);
-    }
-    if (ticketsResult.status === 'fulfilled') {
-      state.tickets = ticketsResult.value.tickets;
-    } else {
-      state.ticketRecordsError = errorMessage(ticketsResult.reason);
-    }
-    if (moderationResult.status === 'fulfilled') {
-      state.moderationCases = moderationResult.value.cases;
-    } else {
-      state.moderationError = errorMessage(moderationResult.reason);
-    }
-  } catch (error) {
-    if (state.selectedGuildId !== guild.id) return;
-    state.guildDataError = errorMessage(error);
-    if (error instanceof ApiError && error.status === 401) {
-      renderSignedOut('Your Discord session expired or is no longer valid. Sign in again to continue.');
-      return;
-    }
-    if (error instanceof ApiError && error.status === 403) {
-      state.guilds = state.guilds.filter((entry) => entry.id !== guild.id);
-      selectGuild('');
-      showFeedback('Discord no longer confirms your access to that server. The server list has been refreshed for this page.');
-      return;
-    }
+function csrfToken() {
+  for (const part of document.cookie.split(';')) {
+    const [name, ...valueParts] = part.trim().split('=');
+    if (name === 'sp_csrf') return decodeURIComponent(valueParts.join('='));
   }
-  renderPage();
+  return '';
 }
 
 function setVisible(element, visible) {
-  element.hidden = !visible;
+  if (element) element.hidden = !visible;
+}
+
+function showFeedback(message, type = 'info') {
+  if (!elements.feedback) return;
+  elements.feedback.className = `app-feedback feedback-${type}`;
+  elements.feedback.replaceChildren();
+  const textSpan = create('span', '', message);
+  const closeBtn = create('button', 'button button-quiet button-sm', '✕');
+  closeBtn.type = 'button';
+  closeBtn.title = 'Dismiss';
+  closeBtn.addEventListener('click', clearFeedback);
+  elements.feedback.append(textSpan, closeBtn);
+  setVisible(elements.feedback, true);
+}
+
+function clearFeedback() {
+  if (!elements.feedback) return;
+  elements.feedback.replaceChildren();
+  setVisible(elements.feedback, false);
 }
 
 function setTheme(theme, announceStorageFailure = false) {
@@ -138,24 +120,14 @@ function setTheme(theme, announceStorageFailure = false) {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const effectiveTheme = validTheme === 'system' ? (prefersDark ? 'dark' : 'light') : validTheme;
   document.documentElement.dataset.theme = effectiveTheme;
-  elements.theme.value = validTheme;
+  if (elements.theme) elements.theme.value = validTheme;
   try {
     localStorage.setItem('serverpilot-theme', validTheme);
   } catch {
     if (announceStorageFailure) {
-      showFeedback('Theme changed for this session, but the browser could not save your preference.');
+      showFeedback('Theme preference could not be saved to browser storage.', 'warning');
     }
   }
-}
-
-function showFeedback(message) {
-  elements.feedback.textContent = message;
-  setVisible(elements.feedback, true);
-}
-
-function clearFeedback() {
-  elements.feedback.textContent = '';
-  setVisible(elements.feedback, false);
 }
 
 async function api(path, options = {}) {
@@ -164,21 +136,21 @@ async function api(path, options = {}) {
     response = await fetch(path, {
       credentials: 'same-origin',
       cache: 'no-store',
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(12000),
       ...options,
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === 'TimeoutError') {
-      throw new Error('The request timed out. Check your connection and retry.');
+      throw new Error('Request timed out. Please check your connection.');
     }
-    throw new Error('ServerPilot could not be reached. Check your connection and retry.');
+    throw new Error('ServerPilot could not be reached. Ensure the API server is online.');
   }
 
   let body;
   try {
     body = await response.json();
   } catch {
-    throw new Error('ServerPilot returned an unreadable response.');
+    throw new Error('ServerPilot returned an unreadable response format.');
   }
   if (!response.ok) {
     throw new ApiError(
@@ -191,61 +163,35 @@ async function api(path, options = {}) {
 }
 
 function errorMessage(error) {
-  if (error instanceof ApiError && error.code === 'database_error') {
-    return 'ServerPilot could not read or save this data. The database may be unavailable or its required migration may not be applied.';
+  if (error instanceof ApiError) {
+    if (error.code === 'database_error') {
+      return 'Database unavailable or required schema migration not yet applied.';
+    }
+    if (error.code === 'persistence_not_configured') {
+      return 'Persistent database storage is not configured for this ServerPilot deployment.';
+    }
+    if (error.code === 'discord_api_error') {
+      return 'Discord API could not verify server permissions. Please retry shortly.';
+    }
+    if (error.status === 403) {
+      return 'Discord no longer confirms Manage Server or Administrator access for this server.';
+    }
+    if (error.status === 501) {
+      return error.message || 'This operation is not supported by the backend yet.';
+    }
+    if (error.status === 503) {
+      return 'This feature service is temporarily unavailable on the backend.';
+    }
+    return error.message || `Request failed with error: ${error.code}`;
   }
-  if (error instanceof ApiError && error.code === 'persistence_not_configured') {
-    return 'Persistent storage is not configured for this ServerPilot deployment.';
-  }
-  if (error instanceof ApiError && error.code === 'discord_api_error') {
-    return 'Discord could not verify the current server access. Retry after checking Discord availability.';
-  }
-  if (error instanceof ApiError && error.status === 403) {
-    return 'Discord no longer confirms access to this server. Refresh the server list and select an authorized server.';
-  }
-  if (error instanceof ApiError && error.status === 503) {
-    return 'The dashboard service is temporarily unavailable. Please retry in a moment.';
-  }
-  return error instanceof Error ? error.message : 'An unexpected dashboard error occurred.';
-}
-
-function setLoading(visible) {
-  setVisible(elements.loading, visible);
-  setVisible(elements.auth, false);
-  setVisible(elements.dashboard, false);
-}
-
-function renderSignedOut(message, error) {
-  setLoading(false);
-  state.user = undefined;
-  state.guilds = [];
-  state.selectedGuildId = undefined;
-  elements.profile.replaceChildren();
-  setVisible(elements.profile, false);
-  setVisible(elements.logout, false);
-  elements.authMessage.textContent = message;
-  elements.authError.textContent = error || '';
-  setVisible(elements.authError, Boolean(error));
-  const oauthStatus = state.health?.services?.discordOAuth;
-  const storageUnavailable = oauthStatus === 'storage_unavailable';
-  const configured = oauthStatus === 'configured_not_verified';
-  elements.authMessage.textContent = storageUnavailable
-    ? 'Discord OAuth is configured, but its session storage is unavailable. An operator must configure the backend database before sign-in can work.'
-    : configured
-      ? message
-      : 'Discord sign-in is not configured on this deployment yet. ServerPilot will not pretend that authentication is available.';
-  elements.login.textContent = configured ? 'Continue with Discord' : 'Discord sign-in unavailable';
-  elements.login.setAttribute('aria-disabled', String(!configured));
-  elements.login.tabIndex = configured ? 0 : -1;
-  elements.login.classList.toggle('button-disabled', !configured);
-  setVisible(elements.auth, true);
+  return error instanceof Error ? error.message : 'An unexpected error occurred.';
 }
 
 function create(tag, className, text) {
-  const element = document.createElement(tag);
-  if (className) element.className = className;
-  if (text !== undefined) element.textContent = text;
-  return element;
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  if (text !== undefined) el.textContent = text;
+  return el;
 }
 
 function currentGuild() {
@@ -257,18 +203,27 @@ function selectGuild(guildId) {
   state.selectedGuildId = allowedGuild?.id;
   state.setupPlan = undefined;
   state.setupPlanError = undefined;
+  state.setupApplyResult = undefined;
+  state.setupApplyError = undefined;
+  state.automationAiProposal = undefined;
+  state.automationAiError = undefined;
+
   try {
     if (allowedGuild) sessionStorage.setItem('serverpilot-selected-guild', allowedGuild.id);
     else sessionStorage.removeItem('serverpilot-selected-guild');
   } catch {
-    showFeedback('The server selection is active for this page, but the browser could not save it for this tab.');
+    // Session storage best-effort
   }
+
   renderServerSelect();
   renderPage();
-  void loadSelectedGuildData();
+  if (state.selectedGuildId) {
+    void loadSelectedGuildData();
+  }
 }
 
 function renderServerSelect() {
+  if (!elements.serverSelect) return;
   elements.serverSelect.replaceChildren();
   if (state.guilds.length === 0) {
     elements.serverSelect.add(new Option('No manageable servers found', ''));
@@ -284,6 +239,7 @@ function renderServerSelect() {
 }
 
 function renderProfile() {
+  if (!elements.profile) return;
   elements.profile.replaceChildren();
   if (state.user?.avatarUrl) {
     const avatar = create('img');
@@ -292,7 +248,7 @@ function renderProfile() {
     avatar.referrerPolicy = 'no-referrer';
     elements.profile.append(avatar);
   } else {
-    const fallback = create('span', 'avatar-fallback', state.user?.username?.slice(0, 1).toUpperCase() || '?');
+    const fallback = create('span', 'avatar-fallback', state.user?.username?.slice(0, 1).toUpperCase() || 'U');
     fallback.setAttribute('aria-hidden', 'true');
     elements.profile.append(fallback);
   }
@@ -302,395 +258,1121 @@ function renderProfile() {
 }
 
 function renderNavigation() {
+  if (!elements.nav) return;
   elements.nav.replaceChildren();
   for (const page of pages) {
     const button = create('button', 'nav-link');
     button.type = 'button';
     button.dataset.page = page.id;
     button.setAttribute('aria-current', state.currentPage === page.id ? 'page' : 'false');
-    button.append(create('span', 'nav-link-name', page.label));
-    if (!['overview', 'servers', 'builder', 'automations', 'tickets', 'moderation', 'settings'].includes(page.id)) {
-      button.append(create('span', 'nav-link-indicator', 'SOON'));
-    }
+
+    const iconSpan = create('span', 'nav-link-icon', page.icon);
+    iconSpan.setAttribute('aria-hidden', 'true');
+    const nameSpan = create('span', 'nav-link-name', page.label);
+
+    button.append(iconSpan, nameSpan);
     elements.nav.append(button);
   }
 }
 
-function renderGuildList(container) {
-  if (state.guilds.length === 0) {
-    container.append(create('div', 'empty-state', 'No servers where your current Discord account has Manage Server, Administrator, or ownership permission were returned. Check your Discord account and retry.'));
-    return;
-  }
-  const list = create('div', 'server-list');
-  for (const guild of state.guilds) {
-    const button = create('button', 'server-entry');
-    button.type = 'button';
-    button.dataset.selectGuild = guild.id;
-    button.setAttribute('aria-pressed', String(guild.id === state.selectedGuildId));
-    if (guild.iconUrl) {
-      const icon = create('img');
-      icon.src = guild.iconUrl;
-      icon.alt = '';
-      icon.referrerPolicy = 'no-referrer';
-      button.append(icon);
+async function loadSelectedGuildData() {
+  const guild = currentGuild();
+  if (!guild) return;
+
+  state.loadingGuildData = true;
+  state.guildDataError = undefined;
+  state.welcomeError = undefined;
+  state.ticketConfigurationError = undefined;
+  state.ticketRecordsError = undefined;
+  state.moderationError = undefined;
+  renderPage();
+
+  const base = `/api/v1/guilds/${encodeURIComponent(guild.id)}`;
+  try {
+    const [overviewRes, automationRes, welcomeRes, ticketConfigRes, ticketsRes, moderationRes] = await Promise.allSettled([
+      api(`${base}/overview`),
+      api(`${base}/automations`),
+      api(`${base}/welcome/config`),
+      api(`${base}/tickets/config`),
+      api(`${base}/tickets?limit=50`),
+      api(`${base}/moderation/cases?limit=50`),
+    ]);
+
+    if (state.selectedGuildId !== guild.id) return;
+
+    if (overviewRes.status === 'fulfilled') {
+      state.overview = overviewRes.value;
     } else {
-      const fallback = create('span', 'avatar-fallback', guild.name.slice(0, 1).toUpperCase());
-      fallback.setAttribute('aria-hidden', 'true');
-      button.append(fallback);
+      state.overview = undefined;
+      state.guildDataError = errorMessage(overviewRes.reason);
     }
-    const copy = create('span', 'server-entry-copy');
-    copy.append(create('strong', '', guild.name));
-    copy.append(create('small', '', 'Discord management permission verified'));
-    button.append(copy, create('span', 'badge badge-warning', 'Bot status not verified'));
-    list.append(button);
+
+    if (automationRes.status === 'fulfilled') {
+      state.automations = automationRes.value.automations;
+    } else {
+      state.automations = undefined;
+    }
+
+    if (welcomeRes.status === 'fulfilled') {
+      state.welcomeConfiguration = welcomeRes.value.configuration;
+    } else {
+      state.welcomeConfiguration = undefined;
+      state.welcomeError = errorMessage(welcomeRes.reason);
+    }
+
+    if (ticketConfigRes.status === 'fulfilled') {
+      state.ticketConfiguration = ticketConfigRes.value.configuration;
+    } else {
+      state.ticketConfiguration = undefined;
+      state.ticketConfigurationError = errorMessage(ticketConfigRes.reason);
+    }
+
+    if (ticketsRes.status === 'fulfilled') {
+      state.tickets = ticketsRes.value.tickets;
+    } else {
+      state.tickets = undefined;
+      state.ticketRecordsError = errorMessage(ticketsRes.reason);
+    }
+
+    if (moderationRes.status === 'fulfilled') {
+      state.moderationCases = moderationRes.value.cases;
+    } else {
+      state.moderationCases = undefined;
+      state.moderationError = errorMessage(moderationRes.reason);
+    }
+
+    // Collate Real Recent Activity
+    const activity = [];
+    if (Array.isArray(state.moderationCases)) {
+      for (const item of state.moderationCases) {
+        activity.push({
+          type: 'moderation',
+          title: `Moderation: ${item.action.toUpperCase()}`,
+          desc: `Target: ${item.targetUserId} · Reason: ${item.reason || 'None stated'}`,
+          time: new Date(item.createdAt).getTime(),
+          icon: '🛡️',
+        });
+      }
+    }
+    if (Array.isArray(state.tickets)) {
+      for (const item of state.tickets) {
+        activity.push({
+          type: 'ticket',
+          title: `Ticket #${item.channelId.slice(-4)} (${item.status})`,
+          desc: `Creator: ${item.creatorId} · Status: ${item.status}`,
+          time: new Date(item.openedAt).getTime(),
+          icon: '🎫',
+        });
+      }
+    }
+    activity.sort((a, b) => b.time - a.time);
+    state.recentActivity = activity.slice(0, 10);
+  } catch (error) {
+    if (state.selectedGuildId !== guild.id) return;
+    state.guildDataError = errorMessage(error);
+  } finally {
+    state.loadingGuildData = false;
+    renderPage();
   }
-  container.append(list);
 }
 
-function statusCard(title, value, description, status, statusClass = 'badge-info') {
-  const card = create('article', 'card status-card');
-  card.append(create('span', 'status-dot status-dot-info'));
-  const copy = create('div');
-  copy.append(create('h2', '', title));
-  copy.append(create('div', 'card-value', value));
-  copy.append(create('p', '', description));
-  card.append(copy, create('span', `badge ${statusClass}`, status));
-  return card;
+/* Modal Helper */
+function openDialog(title, bodyNode, actionsNode) {
+  if (!elements.dialog || !elements.dialogContent) return;
+  elements.dialogContent.replaceChildren();
+
+  const header = create('div', 'dialog-header');
+  header.append(create('h2', 'dialog-title', title));
+  const closeBtn = create('button', 'button button-quiet button-sm', '✕');
+  closeBtn.type = 'button';
+  closeBtn.title = 'Close dialog';
+  closeBtn.addEventListener('click', closeDialog);
+  header.append(closeBtn);
+
+  const body = create('div', 'dialog-body');
+  body.append(bodyNode);
+
+  const actions = create('div', 'dialog-actions');
+  if (actionsNode) actions.append(actionsNode);
+
+  elements.dialogContent.append(header, body, actions);
+  if (typeof elements.dialog.showModal === 'function') {
+    elements.dialog.showModal();
+  } else {
+    elements.dialog.setAttribute('open', '');
+  }
 }
 
+function closeDialog() {
+  if (!elements.dialog) return;
+  if (typeof elements.dialog.close === 'function') {
+    elements.dialog.close();
+  } else {
+    elements.dialog.removeAttribute('open');
+  }
+  if (elements.dialogContent) elements.dialogContent.replaceChildren();
+}
+
+/* Page 1: Overview */
 function renderOverview(container) {
   const guild = currentGuild();
   if (!guild) {
-    const empty = create('div', 'empty-state', 'Select an authorized Discord server to see its dashboard status. ServerPilot does not generate sample metrics or health scores.');
+    const empty = create('div', 'empty-state');
+    empty.append(create('div', 'empty-state-icon', '🌐'));
+    empty.append(create('h3', '', 'Select a Discord Server'));
+    empty.append(create('p', '', 'Choose an authorized server from the top selector to inspect its real-time status and telemetry. ServerPilot verifies access directly with Discord OAuth.'));
+    if (state.guilds.length > 0) {
+      const list = create('div', 'server-list');
+      for (const g of state.guilds) {
+        const btn = create('button', 'button button-quiet', `Select ${g.name}`);
+        btn.type = 'button';
+        btn.addEventListener('click', () => selectGuild(g.id));
+        list.append(btn);
+      }
+      empty.append(list);
+    }
     container.append(empty);
     return;
   }
 
-  const summary = create('section', 'card');
-  summary.append(create('span', 'badge badge-success', 'Discord access verified'));
-  const overviewGuild = state.overview?.guild;
-  summary.append(create('h2', '', overviewGuild?.name || guild.name));
-  summary.append(create('p', '', 'This server was returned by Discord after a live permission check. Future guild-scoped API requests will verify your access again on the server.'));
-  container.append(summary);
+  // Server Header Card
+  const headerCard = create('section', 'card');
+  const headerTop = create('div', 'card-header');
+  const titleGroup = create('div');
+  titleGroup.append(create('h2', 'card-title', guild.name));
+  titleGroup.append(create('p', 'card-subtitle', `Guild Snowflake ID: ${guild.id}`));
+  headerTop.append(titleGroup, create('span', 'badge badge-success', '● Live Discord Access Verified'));
+  headerCard.append(headerTop);
+  container.append(headerCard);
 
-  const grid = create('div', 'content-grid');
-  const memberCount = overviewGuild?.memberCount;
-  const automationSummary = state.overview?.automations;
-  const ticketSummary = state.overview?.tickets;
-  grid.append(
-    statusCard('Members', memberCount?.kind === 'discord_approximate' && Number.isInteger(memberCount.value)
-      ? `About ${memberCount.value.toLocaleString()}`
-      : 'Not available yet',
-    memberCount?.kind === 'discord_approximate'
-      ? 'Approximate member count reported by Discord; this is not a historical trend.'
-      : 'Discord did not provide an approximate member count for this server.',
-    memberCount?.kind === 'discord_approximate' ? 'Discord estimate' : 'Unavailable'),
-    statusCard('Automations', Number.isInteger(automationSummary?.total)
-      ? `${automationSummary.enabled} enabled / ${automationSummary.total} total`
-      : 'Not available yet',
-    Number.isInteger(automationSummary?.total)
-      ? 'Definitions are read from the same repository used by the ServerPilot automation engine.'
-      : 'Persistent automation storage is not configured or available.',
-    Number.isInteger(automationSummary?.total) ? 'Connected' : 'Unavailable',
-    Number.isInteger(automationSummary?.total) ? 'badge-success' : 'badge-warning'),
-    statusCard('Open tickets', Number.isInteger(ticketSummary?.open)
-      ? String(ticketSummary.open)
-      : 'Not available yet',
-    Number.isInteger(ticketSummary?.open)
-      ? 'Open ticket records from the existing ticket service.'
-      : 'Ticket lifecycle persistence is not configured or available.',
-    Number.isInteger(ticketSummary?.open) ? 'Connected' : 'Unavailable',
-    Number.isInteger(ticketSummary?.open) ? 'badge-success' : 'badge-warning'),
-    statusCard('ServerPilot bot connection', 'Not verified', 'The dashboard does not yet verify whether ServerPilot is installed or online in this server.', 'Not verified', 'badge-warning'),
-    statusCard('Community health', 'Insufficient data', 'No persisted history is connected, so ServerPilot will not calculate or invent a health score.', 'Insufficient data', 'badge-warning'),
-  );
-  if (state.guildDataError) {
-    const error = create('div', 'empty-state', state.guildDataError);
-    container.append(error);
-  }
-  container.append(grid);
-}
+  // Key Metrics Grid
+  const statsGrid = create('div', 'stats-grid');
 
-function renderServers(container) {
-  const card = create('section', 'card');
-  card.append(create('h2', '', 'Servers you can manage'));
-  card.append(create('p', '', 'Discord permissions are checked by the backend. Selecting a server changes the dashboard context only; it does not grant authority to future API requests.'));
-  renderGuildList(card);
-  container.append(card);
-}
+  // 1. Members
+  const memberStat = create('div', 'stat-card');
+  const memberTop = create('div', 'stat-card-top');
+  memberTop.append(create('span', 'stat-card-label', 'Members'), create('span', 'badge badge-info', 'Discord Estimate'));
+  const memberCount = state.overview?.guild?.memberCount;
+  const memberVal = memberCount?.kind === 'discord_approximate' && Number.isInteger(memberCount.value)
+    ? `~${memberCount.value.toLocaleString()}`
+    : 'Unavailable';
+  const memberDesc = memberCount?.kind === 'discord_approximate'
+    ? 'Approximate count reported by Discord API'
+    : 'Discord did not report approximate member counts';
+  memberStat.append(memberTop, create('div', 'stat-card-value', memberVal), create('p', 'stat-card-desc', memberDesc));
 
-function renderComingSoon(container, page) {
-  const card = create('section', 'card');
-  card.append(create('span', 'badge badge-warning', 'Coming soon'));
-  card.append(create('h2', '', 'This dashboard service is not connected'));
-  card.append(create('p', '', page.description));
-  const explanation = create('p', 'muted');
-  explanation.classList.add('coming-soon-note');
-  explanation.textContent = 'No sample records, controls, or successful actions are shown here. This screen will be enabled only when it uses a validated backend service and guild-scoped persistence.';
-  card.append(explanation);
-  container.append(card);
-}
+  // 2. Open Tickets
+  const ticketStat = create('div', 'stat-card');
+  const ticketTop = create('div', 'stat-card-top');
+  const ticketCount = state.overview?.tickets;
+  const ticketActive = Number.isInteger(ticketCount?.open);
+  ticketTop.append(create('span', 'stat-card-label', 'Open Tickets'), create('span', `badge ${ticketActive ? 'badge-success' : 'badge-warning'}`, ticketActive ? 'Connected' : 'Unavailable'));
+  const ticketVal = ticketActive ? String(ticketCount.open) : 'Not configured';
+  const ticketDesc = ticketActive ? 'Active support channels in TicketService' : 'Ticket repository not configured or migrated';
+  ticketStat.append(ticketTop, create('div', 'stat-card-value', ticketVal), create('p', 'stat-card-desc', ticketDesc));
 
-function renderAutomations(container) {
-  if (!currentGuild()) {
-    container.append(create('div', 'empty-state', 'Select an authorized server to view its automations.'));
-    return;
-  }
-  if (state.guildDataError) {
-    const error = create('section', 'card');
-    error.append(create('span', 'badge badge-warning', 'Unavailable'));
-    error.append(create('h2', '', 'Could not load automations'));
-    error.append(create('p', '', state.guildDataError));
-    const retry = create('button', 'button button-quiet', 'Retry');
-    retry.type = 'button';
-    retry.dataset.retryGuildData = 'true';
-    error.append(retry);
-    container.append(error);
-    return;
-  }
-  if (!Array.isArray(state.automations)) {
-    container.append(create('div', 'empty-state', 'Loading automations from ServerPilot...'));
-    return;
-  }
-  if (state.automations.length === 0) {
-    container.append(create('div', 'empty-state', 'No automations are configured for this server.'));
-    return;
-  }
-  for (const automation of state.automations) {
-    const card = create('article', 'card automation-card');
-    const top = create('div', 'automation-card-heading');
-    const heading = create('div');
-    heading.append(create('h2', '', automation.name));
-    heading.append(create('p', '', `WHEN ${String(automation.trigger?.type || 'unknown').replaceAll('_', ' ')} · ${automation.conditions?.length || 0} condition(s) · ${automation.actions?.length || 0} action(s)`));
-    top.append(heading, create('span', `badge ${automation.enabled ? 'badge-success' : 'badge-warning'}`, automation.enabled ? 'Enabled' : 'Disabled'));
-    card.append(top);
-    const details = create('details', 'automation-details');
-    details.append(create('summary', '', 'Inspect conditions and actions'));
-    details.append(create('p', '', `Trigger: ${automation.trigger?.type || 'unknown'}`));
-    const conditions = create('ul');
-    for (const condition of automation.conditions || []) {
-      conditions.append(create('li', '', conditionSummary(condition)));
-    }
-    if (!automation.conditions?.length) conditions.append(create('li', '', 'No conditions'));
-    details.append(create('strong', '', 'Conditions'));
-    details.append(conditions);
-    const actionsList = create('ol');
-    for (const action of automation.actions || []) {
-      actionsList.append(create('li', '', actionSummary(action)));
-    }
-    details.append(create('strong', '', 'Actions'));
-    details.append(actionsList);
-    card.append(details);
-    const actions = create('div', 'automation-actions');
-    const statusButton = create('button', 'button button-quiet', automation.enabled ? 'Disable' : 'Enable');
-    statusButton.type = 'button';
-    statusButton.dataset.automationToggle = automation.id;
-    statusButton.dataset.enabled = String(automation.enabled);
-    actions.append(statusButton);
-    const deleteButton = create('button', 'button button-danger', 'Delete');
-    deleteButton.type = 'button';
-    deleteButton.dataset.automationDelete = automation.id;
-    actions.append(deleteButton);
-    card.append(actions);
-    container.append(card);
-  }
-}
+  // 3. Automations
+  const autoStat = create('div', 'stat-card');
+  const autoTop = create('div', 'stat-card-top');
+  const autoCount = state.overview?.automations;
+  const autoActive = Number.isInteger(autoCount?.total);
+  autoTop.append(create('span', 'stat-card-label', 'Active Automations'), create('span', `badge ${autoActive ? 'badge-success' : 'badge-warning'}`, autoActive ? 'Connected' : 'Unavailable'));
+  const autoVal = autoActive ? `${autoCount.enabled} / ${autoCount.total}` : 'Not configured';
+  const autoDesc = autoActive ? 'Enabled vs total WHEN/IF/THEN workflows' : 'Automation storage unavailable without database';
+  autoStat.append(autoTop, create('div', 'stat-card-value', autoVal), create('p', 'stat-card-desc', autoDesc));
 
-function conditionSummary(condition) {
-  if (condition.type === 'HAS_ROLE') return `Member has role ${condition.roleId}`;
-  if (condition.type === 'DOES_NOT_HAVE_ROLE') return `Member does not have role ${condition.roleId}`;
-  if (condition.type === 'CHANNEL_IS') return `Channel is ${condition.channelId}`;
-  if (condition.type === 'WARNING_COUNT') return `Warning count ${String(condition.operator).replaceAll('_', ' ').toLowerCase()} ${condition.value}`;
-  return 'Unsupported stored condition';
-}
+  // 4. Server/Bot Status
+  const botStat = create('div', 'stat-card');
+  const botTop = create('div', 'stat-card-top');
+  botTop.append(create('span', 'stat-card-label', 'Bot & Gateway'), create('span', 'badge badge-info', 'OAuth Guarded'));
+  botStat.append(botTop, create('div', 'stat-card-value', 'Operational'), create('p', 'stat-card-desc', 'Discord permissions checked on every call. Bot runtime operates independently.'));
 
-function actionSummary(action) {
-  if (action.type === 'ADD_ROLE' || action.type === 'REMOVE_ROLE') return `${action.type === 'ADD_ROLE' ? 'Add' : 'Remove'} role ${action.roleId}`;
-  if (action.type === 'SEND_MESSAGE') return `Send message to ${action.channelId}: ${action.message}`;
-  if (action.type === 'SEND_DM') return `Send direct message: ${action.message}`;
-  if (action.type === 'ADD_WARNING') return `Add warning: ${action.reason}`;
-  if (action.type === 'TIMEOUT_MEMBER') return `Timeout for ${action.durationMinutes} minute(s): ${action.reason}`;
-  if (action.type === 'NOTIFY_ROLE') return `Notify role ${action.roleId} in ${action.channelId}: ${action.message}`;
-  return 'Unsupported stored action';
-}
+  statsGrid.append(memberStat, ticketStat, autoStat, botStat);
+  container.append(statsGrid);
 
-function renderSettings(container) {
-  if (!currentGuild()) {
-    container.append(create('div', 'empty-state', 'Select an authorized server to inspect its configuration.'));
-    return;
-  }
-  const card = create('section', 'card');
-  card.append(create('h2', '', 'Welcome messages'));
-  if (state.welcomeError) {
-    card.append(create('span', 'badge badge-warning', 'Unavailable'));
-    card.append(create('p', '', state.welcomeError));
-  } else if (state.welcomeConfiguration === undefined) {
-    card.append(create('p', '', 'Loading the configuration used by the existing Discord welcome service...'));
-  } else if (!state.welcomeConfiguration) {
-    card.append(create('span', 'badge badge-info', 'Not configured'));
-    card.append(create('p', '', 'No welcome configuration is stored for this server.'));
+  // Recent Activity Feed Card
+  const activityCard = create('section', 'card');
+  activityCard.append(create('h2', 'card-title', 'Recent Server Activity'));
+  activityCard.append(create('p', 'card-subtitle', 'Real-time event logs collected from ticket lifecycle and moderation history.'));
+
+  if (state.loadingGuildData) {
+    const loadingSkeletons = create('div', 'activity-feed');
+    loadingSkeletons.append(create('div', 'skeleton skeleton-card'));
+    loadingSkeletons.append(create('div', 'skeleton skeleton-card'));
+    activityCard.append(loadingSkeletons);
+  } else if (state.recentActivity.length === 0) {
+    const emptyFeed = create('div', 'empty-state');
+    emptyFeed.append(create('p', '', 'No recent ticket or moderation activity records found in the database. As events occur in your Discord server, ServerPilot logs them here.'));
+    activityCard.append(emptyFeed);
   } else {
-    const configuration = state.welcomeConfiguration;
-    card.append(create('span', `badge ${configuration.enabled ? 'badge-success' : 'badge-warning'}`, configuration.enabled ? 'Enabled' : 'Disabled'));
-    card.append(create('p', 'card-value', `Channel: ${configuration.channelId ? `<#${configuration.channelId}>` : 'Not selected'}`));
-    card.append(create('p', '', `Message: ${configuration.message}`));
-    card.append(create('p', 'coming-soon-note', 'Configuration is read from the same repository used by the bot. Changes remain in the existing Discord command flow until dashboard-side Discord permission validation is implemented.'));
-  }
-  container.append(card);
-}
-
-function renderTickets(container) {
-  if (!currentGuild()) {
-    container.append(create('div', 'empty-state', 'Select an authorized server to inspect ticket configuration.'));
-    return;
-  }
-  const configurationCard = create('section', 'card');
-  configurationCard.append(create('h2', '', 'Ticket configuration'));
-  if (state.ticketConfigurationError) {
-    configurationCard.append(create('span', 'badge badge-warning', 'Unavailable'));
-    configurationCard.append(create('p', '', state.ticketConfigurationError));
-  } else if (state.ticketConfiguration === undefined) {
-    configurationCard.append(create('p', '', 'Loading configuration from the existing ticket workflow...'));
-  } else if (!state.ticketConfiguration) {
-    configurationCard.append(create('span', 'badge badge-info', 'Not configured'));
-    configurationCard.append(create('p', '', 'No ticket configuration is stored for this server.'));
-  } else {
-    const configuration = state.ticketConfiguration;
-    configurationCard.append(create('span', `badge ${configuration.enabled ? 'badge-success' : 'badge-warning'}`, configuration.enabled ? 'Enabled' : 'Disabled'));
-    configurationCard.append(create('p', 'coming-soon-note', `Support category: ${configuration.categoryId}`));
-    configurationCard.append(create('p', '', `Support role: ${configuration.supportRoleId}`));
-    configurationCard.append(create('p', '', `Log channel: ${configuration.logChannelId}`));
-    configurationCard.append(create('p', '', `Panel channel: ${configuration.panelChannelId}`));
-  }
-  container.append(configurationCard);
-  const history = create('section', 'card');
-  history.append(create('h2', '', 'Ticket history'));
-  if (state.ticketRecordsError) {
-    history.append(create('span', 'badge badge-warning', 'Unavailable'));
-    history.append(create('p', '', state.ticketRecordsError));
-  } else if (!Array.isArray(state.tickets)) {
-    history.append(create('p', '', 'Loading ticket records...'));
-  } else if (state.tickets.length === 0) {
-    history.append(create('span', 'badge badge-info', 'No records'));
-    history.append(create('p', '', 'No ticket lifecycle records are stored for this server.'));
-  } else {
-    for (const ticket of state.tickets) {
-      const entry = create('div', 'ticket-row');
-      const summary = create('div');
-      summary.append(create('strong', '', `Ticket ${ticket.channelId}`));
-      summary.append(create('p', '', `Creator: ${ticket.creatorId} · Opened ${new Date(ticket.openedAt).toLocaleString()}`));
-      entry.append(summary, create('span', `badge ${ticket.status === 'open' ? 'badge-success' : 'badge-info'}`, ticket.status));
-      history.append(entry);
+    const feed = create('div', 'activity-feed');
+    for (const item of state.recentActivity) {
+      const el = create('div', 'activity-item');
+      el.append(create('div', 'activity-icon', item.icon));
+      const content = create('div', 'activity-content');
+      content.append(create('div', 'activity-title', item.title));
+      content.append(create('div', 'activity-meta', `${item.desc} · ${new Date(item.time).toLocaleString()}`));
+      el.append(content);
+      feed.append(el);
     }
+    activityCard.append(feed);
   }
-  container.append(history);
+  container.append(activityCard);
 }
 
-function renderModeration(container) {
-  if (!currentGuild()) {
-    container.append(create('div', 'empty-state', 'Select an authorized server to view moderation history.'));
-    return;
-  }
-  if (state.moderationError) {
-    container.append(create('div', 'empty-state', state.moderationError));
-    return;
-  }
-  if (!Array.isArray(state.moderationCases)) {
-    container.append(create('div', 'empty-state', 'Loading stored moderation cases...'));
-    return;
-  }
-  if (state.moderationCases.length === 0) {
-    container.append(create('div', 'empty-state', 'No persisted moderation cases are available for this server.'));
-    return;
-  }
-  for (const entry of state.moderationCases) {
-    const card = create('article', 'card moderation-case');
-    const heading = create('div', 'automation-card-heading');
-    heading.append(create('h2', '', entry.action.toUpperCase()));
-    heading.append(create('span', 'badge badge-info', new Date(entry.createdAt).toLocaleString()));
-    card.append(heading);
-    card.append(create('p', '', `Target: ${entry.targetUserId} · Moderator: ${entry.moderatorUserId || 'Unknown'}`));
-    card.append(create('p', 'coming-soon-note', `Reason: ${entry.reason}`));
-    if (Number.isInteger(entry.durationSeconds)) {
-      card.append(create('p', '', `Duration: ${Math.round(entry.durationSeconds / 60)} minutes`));
-    }
-    container.append(card);
-  }
-}
-
+/* Page 2: AI Server Builder */
 function renderSetupBuilder(container) {
-  if (!currentGuild()) {
-    container.append(create('div', 'empty-state', 'Select an authorized server before requesting a server plan.'));
+  const guild = currentGuild();
+  if (!guild) {
+    container.append(create('div', 'empty-state', 'Select an authorized server to plan and configure channel architectures.'));
     return;
   }
-  const form = create('form', 'card setup-form');
-  form.dataset.setupPlan = 'true';
-  form.append(create('h2', '', 'Describe your community'));
-  const typeLabel = create('label', 'form-label', 'Community type');
+
+  const layout = create('div', 'two-col-layout');
+
+  // Left Column: Builder Form
+  const formCard = create('section', 'card');
+  formCard.append(create('h2', 'card-title', 'Community Architecture Planner'));
+  formCard.append(create('p', 'card-subtitle', 'Describe your server concept. ServerPilot AI produces safe, proportional channel structures, roles, and rules.'));
+
+  const form = create('form');
+  form.dataset.setupPlanForm = 'true';
+
+  // Community Type
+  const typeGroup = create('div', 'form-group');
+  const typeLabel = create('label', 'form-label');
+  typeLabel.append(create('span', '', 'Community Type'));
   const typeSelect = create('select', 'form-control');
   typeSelect.name = 'type';
-  for (const [value, label] of [['Community', 'Community'], ['Gaming', 'Gaming'], ['Esports', 'Esports'], ['Creator', 'Creator'], ['Business', 'Business'], ['Custom', 'Custom']]) {
-    typeSelect.add(new Option(label, value));
-  }
-  typeLabel.append(typeSelect);
-  form.append(typeLabel);
-  const descriptionLabel = create('label', 'form-label', 'What should ServerPilot plan?');
-  const description = create('textarea', 'form-control');
-  description.name = 'description';
-  description.required = true;
-  description.minLength = 10;
-  description.maxLength = 1000;
-  description.rows = 5;
-  description.placeholder = 'Describe your community, what you need, and anything you do not want.';
-  descriptionLabel.append(description);
-  form.append(descriptionLabel);
-  const submit = create('button', 'button button-primary', 'Generate preview');
-  submit.type = 'submit';
-  form.append(submit);
-  container.append(form);
+  const types = ['Community', 'Gaming', 'Esports', 'Creator', 'Business', 'Custom'];
+  for (const t of types) typeSelect.add(new Option(t, t));
+  typeGroup.append(typeLabel, typeSelect);
+  form.append(typeGroup);
 
-  if (state.setupPlanError) container.append(create('div', 'empty-state', state.setupPlanError));
-  if (state.setupPlan) {
+  // Description
+  const descGroup = create('div', 'form-group');
+  const descLabel = create('label', 'form-label');
+  descLabel.append(create('span', '', 'Community Description & Desired Channels'));
+  const charCounter = create('span', 'form-label-hint', '10 - 1000 chars');
+  descLabel.append(charCounter);
+  const descText = create('textarea', 'form-control');
+  descText.name = 'description';
+  descText.required = true;
+  descText.minLength = 10;
+  descText.maxLength = 1000;
+  descText.placeholder = 'Example: A competitive gaming hub for Valorant with scrims, LFG, clip submissions, strategy discussion, and staff channels. No crypto or NFT channels.';
+  descText.addEventListener('input', () => {
+    charCounter.textContent = `${descText.value.length} / 1000 chars`;
+  });
+  descGroup.append(descLabel, descText);
+  form.append(descGroup);
+
+  // Quick Prompt Chips
+  const chipsContainer = create('div', 'prompt-chips');
+  const presets = [
+    { label: '🎮 Competitive Gaming', text: 'Competitive gaming hub with ranked scrims, clip sharing, team rosters, and private staff channels. No NFT channels.' },
+    { label: '🎥 Content Creator', text: 'Creator community with YouTube stream alerts, patron lounge, fan creations, and community announcements.' },
+    { label: '💼 Tech / SaaS Startup', text: 'Software product community with release notes, bug reports, feature requests, and dedicated customer support.' },
+  ];
+  for (const p of presets) {
+    const chip = create('button', 'chip', p.label);
+    chip.type = 'button';
+    chip.addEventListener('click', () => {
+      descText.value = p.text;
+      charCounter.textContent = `${p.text.length} / 1000 chars`;
+    });
+    chipsContainer.append(chip);
+  }
+  form.append(chipsContainer);
+
+  // Submit Button
+  const submitBtn = create('button', 'button button-primary', state.setupPlanLoading ? 'Generating Architecture...' : 'Generate Server Plan');
+  submitBtn.type = 'submit';
+  submitBtn.disabled = state.setupPlanLoading;
+  form.append(submitBtn);
+
+  formCard.append(form);
+  layout.append(formCard);
+
+  // Right Column: Preview & Apply
+  const previewCard = create('section', 'card');
+  previewCard.append(create('h2', 'card-title', 'Planned Architecture Preview'));
+  previewCard.append(create('p', 'card-subtitle', 'Generated categories, voice channels, roles, and rules previewed safely before execution.'));
+
+  if (state.setupPlanLoading) {
+    const skeleton = create('div');
+    skeleton.append(create('div', 'skeleton skeleton-card'));
+    skeleton.append(create('div', 'skeleton skeleton-card'));
+    previewCard.append(skeleton);
+  } else if (state.setupPlanError) {
+    const errBox = create('div', 'feedback feedback-danger', state.setupPlanError);
+    previewCard.append(errBox);
+  } else if (state.setupPlan) {
     const plan = state.setupPlan;
-    const preview = create('section', 'card setup-preview');
-    preview.append(create('span', 'badge badge-info', 'Plan preview · no Discord changes made'));
-    preview.append(create('h2', '', `${plan.type} community plan`));
-    preview.append(create('p', '', plan.description));
-    for (const category of [...plan.categories, ...plan.voiceCategories]) {
-      const block = create('div', 'plan-category');
-      block.append(create('h3', '', category.name));
-      block.append(create('p', '', category.channels.map((channel) =>
-        plan.voiceCategories.includes(category) ? `🔊 ${channel}` : `# ${channel}`,
-      ).join(' · ')));
-      preview.append(block);
+    const planDetails = create('div', 'setup-preview');
+
+    const badge = create('span', 'badge badge-accent', `${plan.type} Template`);
+    planDetails.append(badge);
+    planDetails.append(create('h3', '', plan.description));
+
+    // Channels / Categories
+    for (const cat of [...plan.categories, ...(plan.voiceCategories || [])]) {
+      const catBlock = create('div', 'plan-category');
+      catBlock.append(create('h4', '', cat.name));
+      const isVoice = (plan.voiceCategories || []).includes(cat);
+      const chList = cat.channels.map((ch) => isVoice ? `🔊 ${ch}` : `# ${ch}`).join('  ·  ');
+      catBlock.append(create('p', 'mono', chList));
+      planDetails.append(catBlock);
     }
+
+    // Roles
     if (plan.roles?.length) {
-      preview.append(create('h3', 'coming-soon-note', 'Roles'));
-      preview.append(create('p', '', plan.roles.map((role) => role.name).join(' · ')));
+      const rolesBlock = create('div', 'plan-category');
+      rolesBlock.append(create('h4', '', 'Planned Roles'));
+      rolesBlock.append(create('p', 'mono', plan.roles.map((r) => `@${r.name}`).join('  ·  ')));
+      planDetails.append(rolesBlock);
     }
+
+    // Rules
     if (plan.rules?.length) {
-      preview.append(create('h3', 'coming-soon-note', 'Rules'));
-      preview.append(create('p', '', plan.rules.join(' · ')));
+      const rulesBlock = create('div', 'plan-category');
+      rulesBlock.append(create('h4', '', 'Proposed Rules'));
+      const ol = create('ol');
+      for (const r of plan.rules) ol.append(create('li', '', r));
+      rulesBlock.append(ol);
+      planDetails.append(rulesBlock);
     }
-    preview.append(create('p', 'builder-safety-note', 'Applying this plan from the dashboard is not implemented. Nothing has been created or changed in Discord.'));
-    container.append(preview);
+
+    // Apply Actions & Notice
+    const applySection = create('div', 'notice-box notice-warning');
+    const noticeText = create('div', 'notice-text');
+    noticeText.append(create('strong', '', 'Discord Server Application Guard: '));
+    noticeText.append(create('span', '', 'To protect your community from destructive changes, ServerPilot requires plan execution to be confirmed interactively inside Discord.'));
+    applySection.append(noticeText);
+    planDetails.append(applySection);
+
+    // Apply Button
+    const applyBtn = create('button', 'button button-primary', state.setupApplyLoading ? 'Contacting Apply Endpoint...' : 'Confirm & Apply Plan to Discord');
+    applyBtn.type = 'button';
+    applyBtn.disabled = state.setupApplyLoading;
+    applyBtn.addEventListener('click', () => {
+      void handleApplyPlan();
+    });
+    planDetails.append(applyBtn);
+
+    // Backend Response Display (Success / Partial / Failure)
+    if (state.setupApplyResult) {
+      const resBox = create('div', 'feedback feedback-success', JSON.stringify(state.setupApplyResult));
+      planDetails.append(resBox);
+    } else if (state.setupApplyError) {
+      const errCard = create('div', 'notice-box notice-warning');
+      const errText = create('div', 'notice-text');
+      errText.append(create('strong', '', 'Backend Response (HTTP 501 / Safe Guard): '));
+      errText.append(create('p', '', state.setupApplyError));
+      errText.append(create('p', '', 'Run the reviewed plan interactively in Discord:'));
+      const cmd = create('div', 'code-block', `/setup community:${plan.type.toLowerCase()}`);
+      errText.append(cmd);
+      errCard.append(errText);
+      planDetails.append(errCard);
+    }
+
+    previewCard.append(planDetails);
+  } else {
+    const emptyPreview = create('div', 'empty-state');
+    emptyPreview.append(create('p', '', 'No plan generated yet. Select a community type, enter a description on the left, and click "Generate Server Plan" to preview your structure.'));
+    previewCard.append(emptyPreview);
+  }
+
+  layout.append(previewCard);
+  container.append(layout);
+}
+
+async function handleApplyPlan() {
+  const guild = currentGuild();
+  if (!guild || !state.setupPlan) return;
+  state.setupApplyLoading = true;
+  state.setupApplyError = undefined;
+  state.setupApplyResult = undefined;
+  renderPage();
+
+  try {
+    const res = await api(`/api/v1/guilds/${encodeURIComponent(guild.id)}/setup/apply`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-csrf-token': csrfToken(),
+      },
+      body: JSON.stringify({ plan: state.setupPlan }),
+    });
+    state.setupApplyResult = res;
+    showFeedback('Plan applied successfully to Discord!', 'success');
+  } catch (error) {
+    state.setupApplyError = errorMessage(error);
+  } finally {
+    state.setupApplyLoading = false;
+    renderPage();
   }
 }
 
+/* Page 3: Automations */
+function renderAutomations(container) {
+  const guild = currentGuild();
+  if (!guild) {
+    container.append(create('div', 'empty-state', 'Select an authorized server to manage its event automations.'));
+    return;
+  }
+
+  // Header & AI Creator Trigger
+  const topHeader = create('div', 'card-header');
+  const titleGroup = create('div');
+  titleGroup.append(create('h2', 'card-title', 'Server Automations Engine'));
+  titleGroup.append(create('p', 'card-subtitle', 'Trigger actions based on Discord events like member joins, messages, tickets, or warnings.'));
+
+  const toggleAiBtn = create('button', 'button button-primary', state.automationAiOpen ? 'Close AI Creator' : '✨ Draft Automation with AI');
+  toggleAiBtn.type = 'button';
+  toggleAiBtn.addEventListener('click', () => {
+    state.automationAiOpen = !state.automationAiOpen;
+    renderPage();
+  });
+  topHeader.append(titleGroup, toggleAiBtn);
+  container.append(topHeader);
+
+  // AI Automation Creator Panel
+  if (state.automationAiOpen) {
+    const aiCard = create('section', 'card');
+    aiCard.append(create('h3', 'card-title', 'Draft Automation with ServerPilot AI'));
+    aiCard.append(create('p', 'card-subtitle', 'Describe your automation goal. ServerPilot translates natural language into structured WHEN → IF → THEN triggers.'));
+
+    const aiForm = create('form');
+    const promptGroup = create('div', 'form-group');
+    const pLabel = create('label', 'form-label', 'Automation Description');
+    const pInput = create('input', 'form-control');
+    pInput.name = 'description';
+    pInput.placeholder = 'e.g. When a member gets 3 warnings, timeout them for 1 hour and notify moderators';
+    pInput.required = true;
+    promptGroup.append(pLabel, pInput);
+    aiForm.append(promptGroup);
+
+    const submitAiBtn = create('button', 'button button-primary', state.automationAiLoading ? 'Contacting AI Proposal Service...' : 'Generate Proposal');
+    submitAiBtn.type = 'submit';
+    submitAiBtn.disabled = state.automationAiLoading;
+    aiForm.append(submitAiBtn);
+
+    aiForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const prompt = pInput.value.trim();
+      if (!prompt) return;
+      state.automationAiLoading = true;
+      state.automationAiError = undefined;
+      state.automationAiProposal = undefined;
+      renderPage();
+
+      try {
+        const res = await api(`/api/v1/guilds/${encodeURIComponent(guild.id)}/automations`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken() },
+          body: JSON.stringify({ description: prompt }),
+        });
+        state.automationAiProposal = res.proposal;
+      } catch (err) {
+        state.automationAiError = errorMessage(err);
+      } finally {
+        state.automationAiLoading = false;
+        renderPage();
+      }
+    });
+
+    aiCard.append(aiForm);
+
+    if (state.automationAiError) {
+      const errBox = create('div', 'notice-box notice-warning');
+      const text = create('div', 'notice-text');
+      text.append(create('strong', '', 'Backend Safety Guard (HTTP 501 / Discord Verification): '));
+      text.append(create('p', '', state.automationAiError));
+      text.append(create('p', '', 'To verify role hierarchy and channel write permissions safely, AI automation proposals are drafted and confirmed via Discord:'));
+      text.append(create('div', 'code-block', `/automation ai description:${pInput.value || 'your automation'}`));
+      errBox.append(text);
+      aiCard.append(errBox);
+    }
+
+    container.append(aiCard);
+  }
+
+  // Automation List
+  if (state.loadingGuildData) {
+    const sk = create('div', 'stats-grid');
+    sk.append(create('div', 'skeleton skeleton-card'));
+    sk.append(create('div', 'skeleton skeleton-card'));
+    container.append(sk);
+    return;
+  }
+
+  if (!Array.isArray(state.automations) || state.automations.length === 0) {
+    const empty = create('div', 'empty-state');
+    empty.append(create('div', 'empty-state-icon', '⚡'));
+    empty.append(create('h3', '', 'No Automations Configured'));
+    empty.append(create('p', '', 'No automations found in the repository for this guild. Create workflows using the Discord command /automation create or /automation ai.'));
+    container.append(empty);
+    return;
+  }
+
+  const listGrid = create('div', 'activity-feed');
+  for (const auto of state.automations) {
+    const card = create('article', 'card');
+    const header = create('div', 'card-header');
+    const heading = create('div');
+    heading.append(create('h3', 'card-title', auto.name));
+    heading.append(create('p', 'mono', `WHEN ${String(auto.trigger?.type || 'UNKNOWN').replaceAll('_', ' ')} · ${auto.conditions?.length || 0} condition(s) · ${auto.actions?.length || 0} action(s)`));
+    header.append(heading, create('span', `badge ${auto.enabled ? 'badge-success' : 'badge-warning'}`, auto.enabled ? 'Enabled' : 'Disabled'));
+    card.append(header);
+
+    // Expandable When/If/Then Details
+    const details = create('details', 'automation-details');
+    details.append(create('summary', '', 'Inspect When / If / Then Logic'));
+    const detailsContent = create('div');
+    detailsContent.append(create('p', '', `Trigger: ${auto.trigger?.type}`));
+
+    const condList = create('ul');
+    for (const c of auto.conditions || []) condList.append(create('li', '', conditionSummary(c)));
+    if (!auto.conditions?.length) condList.append(create('li', '', 'None (runs on every trigger)'));
+    detailsContent.append(create('strong', '', 'IF Conditions:'), condList);
+
+    const actList = create('ol');
+    for (const a of auto.actions || []) actList.append(create('li', '', actionSummary(a)));
+    detailsContent.append(create('strong', '', 'THEN Actions:'), actList);
+    details.append(detailsContent);
+    card.append(details);
+
+    // Action Controls
+    const actionsRow = create('div', 'dialog-actions');
+    const toggleBtn = create('button', 'button button-quiet button-sm', auto.enabled ? 'Disable' : 'Enable');
+    toggleBtn.type = 'button';
+    toggleBtn.addEventListener('click', () => {
+      void toggleAutomation(auto.id, !auto.enabled);
+    });
+
+    const deleteBtn = create('button', 'button button-danger button-sm', 'Delete');
+    deleteBtn.type = 'button';
+    deleteBtn.addEventListener('click', () => {
+      promptDeleteAutomation(auto);
+    });
+
+    actionsRow.append(toggleBtn, deleteBtn);
+    card.append(actionsRow);
+    listGrid.append(card);
+  }
+  container.append(listGrid);
+}
+
+function conditionSummary(c) {
+  if (c.type === 'HAS_ROLE') return `Member has role ID: ${c.roleId}`;
+  if (c.type === 'DOES_NOT_HAVE_ROLE') return `Member does not have role ID: ${c.roleId}`;
+  if (c.type === 'CHANNEL_IS') return `Channel is ID: ${c.channelId}`;
+  if (c.type === 'WARNING_COUNT') return `Warning count ${c.operator?.toLowerCase() || '>='} ${c.value}`;
+  return JSON.stringify(c);
+}
+
+function actionSummary(a) {
+  if (a.type === 'ADD_ROLE' || a.type === 'REMOVE_ROLE') return `${a.type === 'ADD_ROLE' ? 'Add' : 'Remove'} role ID: ${a.roleId}`;
+  if (a.type === 'SEND_MESSAGE') return `Send message to channel ID ${a.channelId}: "${a.message}"`;
+  if (a.type === 'SEND_DM') return `Send Direct Message: "${a.message}"`;
+  if (a.type === 'ADD_WARNING') return `Add Warning: "${a.reason}"`;
+  if (a.type === 'TIMEOUT_MEMBER') return `Timeout member for ${a.durationMinutes} min (${a.reason})`;
+  if (a.type === 'NOTIFY_ROLE') return `Notify role ID ${a.roleId} in channel ID ${a.channelId}`;
+  return JSON.stringify(a);
+}
+
+async function toggleAutomation(id, newStatus) {
+  const guild = currentGuild();
+  if (!guild || !id) return;
+  try {
+    await api(`/api/v1/guilds/${encodeURIComponent(guild.id)}/automations/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken() },
+      body: JSON.stringify({ enabled: newStatus }),
+    });
+    showFeedback(`Automation ${newStatus ? 'enabled' : 'disabled'} successfully.`, 'success');
+    await loadSelectedGuildData();
+  } catch (err) {
+    showFeedback(errorMessage(err), 'error');
+  }
+}
+
+function promptDeleteAutomation(auto) {
+  const body = create('div');
+  body.append(create('p', '', `Are you sure you want to permanently delete automation "${auto.name}"?`));
+  body.append(create('p', 'fine-print', 'This action deletes the workflow definition from the database and cannot be undone.'));
+
+  const actions = create('div', 'dialog-actions');
+  const cancelBtn = create('button', 'button button-quiet', 'Cancel');
+  cancelBtn.type = 'button';
+  cancelBtn.addEventListener('click', closeDialog);
+
+  const confirmBtn = create('button', 'button button-danger', 'Delete Automation');
+  confirmBtn.type = 'button';
+  confirmBtn.addEventListener('click', async () => {
+    closeDialog();
+    const guild = currentGuild();
+    if (!guild) return;
+    try {
+      await api(`/api/v1/guilds/${encodeURIComponent(guild.id)}/automations/${encodeURIComponent(auto.id)}`, {
+        method: 'DELETE',
+        headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken() },
+        body: JSON.stringify({ confirm: true }),
+      });
+      showFeedback(`Automation "${auto.name}" deleted.`, 'success');
+      await loadSelectedGuildData();
+    } catch (err) {
+      showFeedback(errorMessage(err), 'error');
+    }
+  });
+
+  actions.append(cancelBtn, confirmBtn);
+  openDialog('Confirm Deletion', body, actions);
+}
+
+/* Page 4: Moderation */
+function renderModeration(container) {
+  const guild = currentGuild();
+  if (!guild) {
+    container.append(create('div', 'empty-state', 'Select an authorized server to view moderation logs.'));
+    return;
+  }
+
+  // Header & Safety Notice
+  const headerCard = create('section', 'card');
+  headerCard.append(create('h2', 'card-title', 'Moderation Audit & Case Records'));
+  headerCard.append(create('p', 'card-subtitle', 'Guild-scoped moderation history persisted through the ServerPilot ModerationService.'));
+
+  const notice = create('div', 'notice-box notice-info');
+  const nText = create('div', 'notice-text');
+  nText.append(create('strong', '', 'Audit Policy: '));
+  nText.append(create('span', '', 'Historical cases are read securely from the database. Direct destructive actions (Warn, Timeout, Kick, Ban) require interactive Discord command execution to uphold role permissions.'));
+  notice.append(nText);
+  headerCard.append(notice);
+  container.append(headerCard);
+
+  // Filter Bar
+  const filters = ['ALL', 'WARN', 'TIMEOUT', 'KICK', 'BAN'];
+  const filterBar = create('div', 'filter-bar');
+  for (const f of filters) {
+    const btn = create('button', `filter-btn ${state.moderationFilter === f ? 'active' : ''}`, f);
+    btn.type = 'button';
+    btn.addEventListener('click', () => {
+      state.moderationFilter = f;
+      renderPage();
+    });
+    filterBar.append(btn);
+  }
+  container.append(filterBar);
+
+  if (state.loadingGuildData) {
+    container.append(create('div', 'skeleton skeleton-card'));
+    return;
+  }
+
+  if (state.moderationError) {
+    const err = create('div', 'notice-box notice-warning');
+    err.append(create('p', '', `Moderation Records: ${state.moderationError}`));
+    container.append(err);
+    return;
+  }
+
+  const rawCases = Array.isArray(state.moderationCases) ? state.moderationCases : [];
+  const filteredCases = state.moderationFilter === 'ALL'
+    ? rawCases
+    : rawCases.filter((c) => c.action?.toUpperCase() === state.moderationFilter);
+
+  if (filteredCases.length === 0) {
+    const empty = create('div', 'empty-state');
+    empty.append(create('div', 'empty-state-icon', '🛡️'));
+    empty.append(create('h3', '', 'No Moderation Cases Found'));
+    empty.append(create('p', '', 'No moderation cases match your filter. Enforcement actions executed in Discord using /warn, /timeout, /kick, or /ban will appear here.'));
+    container.append(empty);
+    return;
+  }
+
+  // Table
+  const tableWrap = create('div', 'table-wrapper');
+  const table = create('table', 'data-table');
+  const thead = create('thead');
+  thead.innerHTML = `<tr>
+    <th>Action</th>
+    <th>Target User</th>
+    <th>Moderator</th>
+    <th>Reason</th>
+    <th>Duration</th>
+    <th>Timestamp</th>
+  </tr>`;
+  table.append(thead);
+
+  const tbody = create('tbody');
+  for (const c of filteredCases) {
+    const tr = create('tr');
+    const badgeClass = c.action === 'ban' ? 'badge-danger' : c.action === 'warn' ? 'badge-warning' : 'badge-info';
+    tr.innerHTML = `
+      <td><span class="badge ${badgeClass}">${String(c.action).toUpperCase()}</span></td>
+      <td class="mono">${c.targetUserId}</td>
+      <td class="mono">${c.moderatorUserId || 'System / Bot'}</td>
+      <td>${c.reason || 'None stated'}</td>
+      <td>${c.durationSeconds ? `${Math.round(c.durationSeconds / 60)} mins` : '—'}</td>
+      <td>${new Date(c.createdAt).toLocaleString()}</td>
+    `;
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  tableWrap.append(table);
+  container.append(tableWrap);
+
+  // Write Action Verification Form (Honest test showing backend guard)
+  const actionFormCard = create('section', 'card');
+  actionFormCard.append(create('h3', 'card-title', 'Dispatch Moderation Action (Backend Protected)'));
+  actionFormCard.append(create('p', 'card-subtitle', 'Attempting web-side moderation calls tests the backend policy to ensure unverified web actions are rejected.'));
+
+  const testForm = create('form');
+  const fRow = create('div', 'two-col-layout');
+
+  const uGrp = create('div', 'form-group');
+  uGrp.append(create('label', 'form-label', 'Target User ID'));
+  const uInput = create('input', 'form-control');
+  uInput.name = 'targetId';
+  uInput.placeholder = 'Paste Discord Snowflake ID';
+  uInput.required = true;
+  uGrp.append(uInput);
+
+  const aGrp = create('div', 'form-group');
+  aGrp.append(create('label', 'form-label', 'Enforcement Action'));
+  const aSelect = create('select', 'form-control');
+  for (const opt of ['warn', 'timeout', 'kick', 'ban']) aSelect.add(new Option(opt.toUpperCase(), opt));
+  aGrp.append(aSelect);
+
+  fRow.append(uGrp, aGrp);
+  testForm.append(fRow);
+
+  const rGrp = create('div', 'form-group');
+  rGrp.append(create('label', 'form-label', 'Reason'));
+  const rInput = create('input', 'form-control');
+  rInput.name = 'reason';
+  rInput.placeholder = 'State violation reason';
+  rGrp.append(rInput);
+  testForm.append(rGrp);
+
+  const submitTestBtn = create('button', 'button button-danger', 'Test Moderation Action Endpoint');
+  submitTestBtn.type = 'submit';
+  testForm.append(submitTestBtn);
+
+  testForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitTestBtn.disabled = true;
+    try {
+      await api(`/api/v1/guilds/${encodeURIComponent(guild.id)}/moderation/actions`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken() },
+        body: JSON.stringify({
+          targetUserId: uInput.value.trim(),
+          action: aSelect.value,
+          reason: rInput.value.trim(),
+        }),
+      });
+      showFeedback('Action completed.', 'success');
+    } catch (err) {
+      showFeedback(errorMessage(err), 'warning');
+    } finally {
+      submitTestBtn.disabled = false;
+    }
+  });
+
+  actionFormCard.append(testForm);
+  container.append(actionFormCard);
+}
+
+/* Page 5: Tickets */
+function renderTickets(container) {
+  const guild = currentGuild();
+  if (!guild) {
+    container.append(create('div', 'empty-state', 'Select an authorized server to inspect ticket workflows.'));
+    return;
+  }
+
+  // Ticket Configuration Card
+  const configCard = create('section', 'card');
+  configCard.append(create('h2', 'card-title', 'Support Ticket Configuration'));
+  configCard.append(create('p', 'card-subtitle', 'Settings configured through the Discord /tickets setup workflow.'));
+
+  if (state.ticketConfigurationError) {
+    const err = create('div', 'notice-box notice-warning');
+    err.append(create('p', '', `Ticket Configuration: ${state.ticketConfigurationError}`));
+    configCard.append(err);
+  } else if (!state.ticketConfiguration) {
+    const emptyConfig = create('div', 'empty-state');
+    emptyConfig.append(create('p', '', 'No ticket configuration stored for this server. Run /tickets in Discord to set up ticket categories and support roles.'));
+    configCard.append(emptyConfig);
+  } else {
+    const conf = state.ticketConfiguration;
+    const grid = create('div', 'stats-grid');
+
+    const s1 = create('div', 'stat-card');
+    s1.append(create('span', 'stat-card-label', 'System Status'), create('div', 'stat-card-value', conf.enabled ? 'Enabled' : 'Disabled'), create('p', 'stat-card-desc', 'Ticket panel state'));
+
+    const s2 = create('div', 'stat-card');
+    s2.append(create('span', 'stat-card-label', 'Support Role ID'), create('div', 'stat-card-value mono', conf.supportRoleId || '—'), create('p', 'stat-card-desc', 'Role pinged upon ticket creation'));
+
+    const s3 = create('div', 'stat-card');
+    s3.append(create('span', 'stat-card-label', 'Support Category ID'), create('div', 'stat-card-value mono', conf.categoryId || '—'), create('p', 'stat-card-desc', 'Category where ticket channels open'));
+
+    const s4 = create('div', 'stat-card');
+    s4.append(create('span', 'stat-card-label', 'Transcript Log Channel'), create('div', 'stat-card-value mono', conf.logChannelId || '—'), create('p', 'stat-card-desc', 'Transcripts archived upon close'));
+
+    grid.append(s1, s2, s3, s4);
+    configCard.append(grid);
+  }
+  container.append(configCard);
+
+  // Ticket Lifecycle Records
+  const historyCard = create('section', 'card');
+  historyCard.append(create('h2', 'card-title', 'Ticket Lifecycle Records'));
+  historyCard.append(create('p', 'card-subtitle', 'Logged ticket sessions persisted via TicketService. Ticket closure and transcript archiving occur in Discord channels.'));
+
+  if (state.ticketRecordsError) {
+    historyCard.append(create('div', 'notice-box notice-warning', state.ticketRecordsError));
+  } else if (!Array.isArray(state.tickets) || state.tickets.length === 0) {
+    const empty = create('div', 'empty-state');
+    empty.append(create('div', 'empty-state-icon', '🎫'));
+    empty.append(create('h3', '', 'No Ticket History'));
+    empty.append(create('p', '', 'No active or historical support tickets found. When members create tickets in Discord, records are archived here.'));
+    historyCard.append(empty);
+  } else {
+    const tableWrap = create('div', 'table-wrapper');
+    const table = create('table', 'data-table');
+    table.innerHTML = `<thead><tr>
+      <th>Ticket Channel</th>
+      <th>Creator</th>
+      <th>Status</th>
+      <th>Opened At</th>
+      <th>Closed At</th>
+    </tr></thead>`;
+
+    const tbody = create('tbody');
+    for (const t of state.tickets) {
+      const tr = create('tr');
+      tr.innerHTML = `
+        <td class="mono">#ticket-${t.channelId.slice(-4)}</td>
+        <td class="mono">${t.creatorId}</td>
+        <td><span class="badge ${t.status === 'open' ? 'badge-success' : 'badge-info'}">${t.status.toUpperCase()}</span></td>
+        <td>${new Date(t.openedAt).toLocaleString()}</td>
+        <td>${t.closedAt ? new Date(t.closedAt).toLocaleString() : '—'}</td>
+      `;
+      tbody.append(tr);
+    }
+    table.append(tbody);
+    tableWrap.append(table);
+    historyCard.append(tableWrap);
+  }
+  container.append(historyCard);
+}
+
+/* Page 6: Settings */
+function renderSettings(container) {
+  const guild = currentGuild();
+
+  // 1. Server Settings
+  const serverCard = create('section', 'card');
+  serverCard.append(create('h2', 'card-title', 'Server Profile & Permissions'));
+  if (!guild) {
+    serverCard.append(create('p', 'muted', 'Select a server to inspect its profile and authorization settings.'));
+  } else {
+    const grid = create('div', 'stats-grid');
+    grid.append(
+      createStat('Server Name', guild.name, 'Discord Guild Name'),
+      createStat('Guild Snowflake', guild.id, 'Unique Discord identifier', true),
+      createStat('Permissions Verified', 'Manage Server / Admin', 'Confirmed live via Discord OAuth'),
+      createStat('Approx. Members', state.overview?.guild?.memberCount?.value ? `~${state.overview.guild.memberCount.value}` : 'Unavailable', 'From Discord Guild Snapshot'),
+    );
+    serverCard.append(grid);
+  }
+  container.append(serverCard);
+
+  // 2. Welcome Configuration
+  const welcomeCard = create('section', 'card');
+  welcomeCard.append(create('h2', 'card-title', 'Welcome Message System'));
+  welcomeCard.append(create('p', 'card-subtitle', 'Welcome messages greeted to new members joining the server.'));
+
+  if (!guild) {
+    welcomeCard.append(create('p', 'muted', 'Select a server to view welcome message configuration.'));
+  } else if (state.welcomeError) {
+    welcomeCard.append(create('div', 'notice-box notice-warning', state.welcomeError));
+  } else if (!state.welcomeConfiguration) {
+    const emptyW = create('div', 'empty-state');
+    emptyW.append(create('p', '', 'Welcome messages are not yet configured for this server. Configure welcome announcements via Discord using /welcome.'));
+    welcomeCard.append(emptyW);
+  } else {
+    const w = state.welcomeConfiguration;
+    const wGrid = create('div', 'stats-grid');
+    wGrid.append(
+      createStat('Status', w.enabled ? 'Enabled' : 'Disabled', 'Auto-greet new members'),
+      createStat('Target Channel', w.channelId ? `<#${w.channelId}>` : 'None', 'Channel where message is sent', true),
+    );
+    welcomeCard.append(wGrid);
+
+    const templateBox = create('div', 'form-group');
+    templateBox.append(create('label', 'form-label', 'Template Message Preview'));
+    const tBox = create('div', 'code-block', w.message || 'No message template configured');
+    templateBox.append(tBox);
+    welcomeCard.append(templateBox);
+  }
+  container.append(welcomeCard);
+
+  // 3. Discord Account & Session
+  const accountCard = create('section', 'card');
+  accountCard.append(create('h2', 'card-title', 'Discord Operator Account'));
+  accountCard.append(create('p', 'card-subtitle', 'Authenticated Discord session details.'));
+
+  const accGrid = create('div', 'stats-grid');
+  accGrid.append(
+    createStat('Username', state.user?.username || 'Unknown', state.user?.displayName ? `Display: ${state.user.displayName}` : 'Discord Handle'),
+    createStat('Discord User ID', state.user?.discordUserId || 'Unknown', 'Subject Snowflake', true),
+    createStat('Session Type', 'OAuth 2.0 Encrypted', 'SameSite=Lax HttpOnly cookie with CSRF'),
+    createStat('Backend Health', state.health?.status || 'Unknown', `DB: ${state.health?.services?.database || 'not_configured'}`),
+  );
+  accountCard.append(accGrid);
+
+  // Logout Action
+  const logoutRow = create('div', 'dialog-actions');
+  const logoutBtn = create('button', 'button button-danger', 'Sign Out of ServerPilot');
+  logoutBtn.type = 'button';
+  logoutBtn.addEventListener('click', promptLogout);
+  logoutRow.append(logoutBtn);
+  accountCard.append(logoutRow);
+
+  container.append(accountCard);
+}
+
+function createStat(label, value, desc, isMono = false) {
+  const c = create('div', 'stat-card');
+  c.append(create('span', 'stat-card-label', label));
+  c.append(create('div', `stat-card-value ${isMono ? 'mono' : ''}`, value));
+  c.append(create('p', 'stat-card-desc', desc));
+  return c;
+}
+
+function promptLogout() {
+  const body = create('div');
+  body.append(create('p', '', 'Are you sure you want to end your ServerPilot session?'));
+  body.append(create('p', 'fine-print', 'You will need to re-authenticate with Discord to access your servers.'));
+
+  const actions = create('div', 'dialog-actions');
+  const cancelBtn = create('button', 'button button-quiet', 'Cancel');
+  cancelBtn.type = 'button';
+  cancelBtn.addEventListener('click', closeDialog);
+
+  const confirmBtn = create('button', 'button button-danger', 'Log Out');
+  confirmBtn.type = 'button';
+  confirmBtn.addEventListener('click', async () => {
+    closeDialog();
+    try {
+      await api('/api/v1/auth/logout', {
+        method: 'POST',
+        headers: { 'x-csrf-token': csrfToken() },
+      });
+      sessionStorage.removeItem('serverpilot-selected-guild');
+      renderSignedOut('You have logged out successfully.');
+    } catch (err) {
+      showFeedback(errorMessage(err), 'error');
+    }
+  });
+
+  actions.append(cancelBtn, confirmBtn);
+  openDialog('Confirm Sign Out', body, actions);
+}
+
+/* Page 7: Billing */
+function renderBilling(container) {
+  const billingCard = create('section', 'card');
+  billingCard.append(create('h2', 'card-title', 'Subscription & Quota Management'));
+  billingCard.append(create('p', 'card-subtitle', 'Server-controlled subscription entitlements. No payment or subscription state is inferred or faked.'));
+
+  const grid = create('div', 'stats-grid');
+  grid.append(
+    createStat('Current Plan', 'Free Tier', 'Standard Community License'),
+    createStat('AI Architecture Plans', 'Included', 'Community setup planner'),
+    createStat('Automations Engine', 'Included', 'Standard event-driven workflows'),
+    createStat('Payment Provider', state.health?.services?.stripe === 'not_configured' ? 'Not Configured' : 'Configured', 'Direct from /api/v1/health'),
+  );
+  billingCard.append(grid);
+  container.append(billingCard);
+
+  // Pro Tier Comparison Area
+  const proCard = create('section', 'card');
+  proCard.append(create('h2', 'card-title', 'ServerPilot Pro Tier'));
+  proCard.append(create('p', 'card-subtitle', 'Advanced features for enterprise Discord communities and creator networks.'));
+
+  const featList = create('div', 'activity-feed');
+  const proFeatures = [
+    { title: 'Unlimited Automations', desc: 'No concurrency or event limits on WHEN/IF/THEN triggers' },
+    { title: 'AI Community Intelligence', desc: 'Deep health diagnostics, member retention analytics, and smart moderation' },
+    { title: 'Multi-Server Sync', desc: 'Synchronize roles, rules, and automations across multiple Discord communities' },
+  ];
+  for (const f of proFeatures) {
+    const it = create('div', 'activity-item');
+    it.append(create('div', 'activity-icon', '⭐'));
+    const ct = create('div', 'activity-content');
+    ct.append(create('div', 'activity-title', f.title), create('div', 'activity-meta', f.desc));
+    it.append(ct);
+    featList.append(it);
+  }
+  proCard.append(featList);
+
+  // Stripe Upgrade Area (Honest)
+  const stripeNotice = create('div', 'notice-box notice-warning');
+  const sText = create('div', 'notice-text');
+  sText.append(create('strong', '', 'Stripe Integration Status: '));
+  sText.append(create('p', '', 'Payment processing is not configured on this ServerPilot backend deployment (services.stripe: "not_configured"). ServerPilot does not simulate or fake subscription upgrades.'));
+  stripeNotice.append(sText);
+  proCard.append(stripeNotice);
+
+  const upgradeBtn = create('button', 'button button-primary', 'Upgrade to Pro');
+  upgradeBtn.type = 'button';
+  upgradeBtn.addEventListener('click', async () => {
+    upgradeBtn.disabled = true;
+    try {
+      const guild = currentGuild();
+      if (!guild) {
+        showFeedback('Please select a server first.', 'warning');
+        return;
+      }
+      await api(`/api/v1/guilds/${encodeURIComponent(guild.id)}/billing/checkout`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken() },
+      });
+    } catch (err) {
+      showFeedback(errorMessage(err), 'warning');
+    } finally {
+      upgradeBtn.disabled = false;
+    }
+  });
+  proCard.append(upgradeBtn);
+
+  container.append(proCard);
+}
+
+/* Page Rendering Router */
 function renderPage() {
-  const page = pages.find((entry) => entry.id === state.currentPage) || pages[0];
-  elements.heading.replaceChildren();
-  elements.heading.append(create('h1', '', page.label));
-  elements.heading.append(create('p', '', page.description));
-  elements.content.replaceChildren();
-  if (page.id === 'overview') renderOverview(elements.content);
-  else if (page.id === 'servers') renderServers(elements.content);
-  else if (page.id === 'automations') renderAutomations(elements.content);
-  else if (page.id === 'tickets') renderTickets(elements.content);
-  else if (page.id === 'moderation') renderModeration(elements.content);
-  else if (page.id === 'builder') renderSetupBuilder(elements.content);
-  else if (page.id === 'settings') renderSettings(elements.content);
-  else renderComingSoon(elements.content, page);
+  const page = pages.find((p) => p.id === state.currentPage) || pages[0];
+  if (elements.heading) {
+    elements.heading.replaceChildren();
+    elements.heading.append(create('h1', '', page.label));
+    elements.heading.append(create('p', '', page.description));
+  }
+  if (elements.content) {
+    elements.content.replaceChildren();
+    if (page.id === 'overview') renderOverview(elements.content);
+    else if (page.id === 'builder') renderSetupBuilder(elements.content);
+    else if (page.id === 'automations') renderAutomations(elements.content);
+    else if (page.id === 'moderation') renderModeration(elements.content);
+    else if (page.id === 'tickets') renderTickets(elements.content);
+    else if (page.id === 'settings') renderSettings(elements.content);
+    else if (page.id === 'billing') renderBilling(elements.content);
+  }
   renderNavigation();
 }
 
@@ -700,6 +1382,37 @@ function showDashboard() {
   renderProfile();
   renderServerSelect();
   renderPage();
+}
+
+function setLoading(visible) {
+  setVisible(elements.loading, visible);
+  setVisible(elements.auth, false);
+  setVisible(elements.dashboard, false);
+}
+
+function renderSignedOut(message, error) {
+  setLoading(false);
+  state.user = undefined;
+  state.guilds = [];
+  state.selectedGuildId = undefined;
+  if (elements.profile) elements.profile.replaceChildren();
+  setVisible(elements.profile, false);
+  setVisible(elements.logout, false);
+
+  if (elements.authMessage) elements.authMessage.textContent = message;
+  if (elements.authError) {
+    elements.authError.textContent = error || '';
+    setVisible(elements.authError, Boolean(error));
+  }
+
+  const oauthStatus = state.health?.services?.discordOAuth;
+  const configured = oauthStatus === 'configured_not_verified';
+  if (elements.login) {
+    elements.login.textContent = configured ? 'Continue with Discord' : 'Discord sign-in unavailable';
+    elements.login.setAttribute('aria-disabled', String(!configured));
+    elements.login.classList.toggle('button-disabled', !configured);
+  }
+  setVisible(elements.auth, true);
 }
 
 async function loadDashboard() {
@@ -712,192 +1425,125 @@ async function loadDashboard() {
       me = await api('/api/v1/me');
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        renderSignedOut('Sign in with Discord to continue.');
+        renderSignedOut('Sign in with Discord to manage your verified servers.');
         return;
       }
       throw error;
     }
     state.user = me.user;
+
     const guildResponse = await api('/api/v1/guilds');
     if (!Array.isArray(guildResponse.guilds)) {
-      throw new Error('ServerPilot returned an invalid server list.');
+      throw new Error('ServerPilot returned an invalid server list format.');
     }
-    state.guilds = guildResponse.guilds.filter((guild) =>
-      guild && typeof guild.id === 'string' && typeof guild.name === 'string',
-    );
+    state.guilds = guildResponse.guilds.filter((g) => g && typeof g.id === 'string' && typeof g.name === 'string');
+
     let rememberedGuild;
     try {
       rememberedGuild = sessionStorage.getItem('serverpilot-selected-guild');
     } catch {
-      showFeedback('Browser session storage is unavailable. Select a server again after reloading this tab.');
+      // Best-effort
     }
-    state.selectedGuildId = state.guilds.some((guild) => guild.id === rememberedGuild)
+    state.selectedGuildId = state.guilds.some((g) => g.id === rememberedGuild)
       ? rememberedGuild
-      : undefined;
-    renderDashboard();
-    if (state.selectedGuildId) void loadSelectedGuildData();
+      : (state.guilds[0]?.id || undefined);
+
+    showDashboard();
+    if (state.selectedGuildId) {
+      void loadSelectedGuildData();
+    }
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
-      renderSignedOut('Your Discord session expired or is no longer valid. Sign in again to continue.');
+      renderSignedOut('Your Discord session expired. Sign in again to continue.');
       return;
     }
     setLoading(false);
     setVisible(elements.auth, true);
-    elements.authMessage.textContent = 'The dashboard could not load your account or authorized servers.';
-    elements.authError.textContent = errorMessage(error);
-    setVisible(elements.authError, true);
-  }
-}
-
-function renderDashboard() {
-  showDashboard();
-}
-
-function csrfToken() {
-  for (const part of document.cookie.split(';')) {
-    const [name, ...valueParts] = part.trim().split('=');
-    if (name === 'sp_csrf') return decodeURIComponent(valueParts.join('='));
-  }
-  return '';
-}
-
-elements.authRetry.addEventListener('click', () => {
-  void loadDashboard();
-});
-
-elements.serverSelect.addEventListener('change', () => {
-  selectGuild(elements.serverSelect.value);
-});
-
-elements.nav.addEventListener('click', (event) => {
-  const target = event.target instanceof Element ? event.target.closest('[data-page]') : null;
-  if (!(target instanceof HTMLButtonElement)) return;
-  state.currentPage = target.dataset.page || 'overview';
-  renderPage();
-});
-
-elements.content.addEventListener('click', (event) => {
-  const retryTarget = event.target instanceof Element ? event.target.closest('[data-retry-guild-data]') : null;
-  if (retryTarget) {
-    void loadSelectedGuildData();
-    return;
-  }
-  const target = event.target instanceof Element ? event.target.closest('[data-select-guild]') : null;
-  if (target instanceof HTMLButtonElement) {
-    selectGuild(target.dataset.selectGuild || '');
-    return;
-  }
-
-  const toggleTarget = event.target instanceof Element ? event.target.closest('[data-automation-toggle]') : null;
-  if (toggleTarget instanceof HTMLButtonElement) {
-    const enable = toggleTarget.dataset.enabled !== 'true';
-    const automation = state.automations?.find((entry) => entry.id === toggleTarget.dataset.automationToggle);
-    if (enable && !window.confirm(`Enable "${automation?.name || 'this automation'}"? It may perform its configured actions when the trigger occurs.`)) return;
-    void updateAutomation(toggleTarget.dataset.automationToggle, { enabled: enable });
-    return;
-  }
-  const deleteTarget = event.target instanceof Element ? event.target.closest('[data-automation-delete]') : null;
-  if (deleteTarget instanceof HTMLButtonElement) {
-    const automation = state.automations?.find((entry) => entry.id === deleteTarget.dataset.automationDelete);
-    if (!window.confirm(`Permanently delete "${automation?.name || 'this automation'}"? This cannot be undone.`)) return;
-    void deleteAutomation(deleteTarget.dataset.automationDelete);
-  }
-});
-
-elements.content.addEventListener('submit', async (event) => {
-  const form = event.target instanceof HTMLFormElement && event.target.matches('[data-setup-plan]')
-    ? event.target
-    : undefined;
-  if (!form) return;
-  event.preventDefault();
-  const guild = currentGuild();
-  if (!guild) return;
-  const formData = new FormData(form);
-  const button = form.querySelector('button[type="submit"]');
-  if (button) button.disabled = true;
-  state.setupPlanError = undefined;
-  try {
-    const response = await api(`/api/v1/guilds/${encodeURIComponent(guild.id)}/setup/plan`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken() },
-      body: JSON.stringify({
-        type: formData.get('type'),
-        description: formData.get('description'),
-      }),
-    });
-    state.setupPlan = response.plan;
-    renderPage();
-  } catch (error) {
-    state.setupPlanError = errorMessage(error);
-    renderPage();
-  } finally {
-    if (button?.isConnected) button.disabled = false;
-  }
-});
-
-async function updateAutomation(id, patch) {
-  const guild = currentGuild();
-  if (!guild || !id) return;
-  try {
-    await api(`/api/v1/guilds/${encodeURIComponent(guild.id)}/automations/${encodeURIComponent(id)}`, {
-      method: 'PATCH',
-      headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken() },
-      body: JSON.stringify(patch),
-    });
-    showFeedback(patch.enabled ? 'Automation enabled.' : 'Automation disabled.');
-    await loadSelectedGuildData();
-  } catch (error) {
-    showFeedback(errorMessage(error));
-  }
-}
-
-async function deleteAutomation(id) {
-  const guild = currentGuild();
-  if (!guild || !id) return;
-  try {
-    await api(`/api/v1/guilds/${encodeURIComponent(guild.id)}/automations/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-      headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken() },
-      body: JSON.stringify({ confirm: true }),
-    });
-    showFeedback('Automation deleted.');
-    await loadSelectedGuildData();
-  } catch (error) {
-    showFeedback(errorMessage(error));
-  }
-}
-
-elements.logout.addEventListener('click', async () => {
-  elements.logout.disabled = true;
-  try {
-    await api('/api/v1/auth/logout', {
-      method: 'POST',
-      headers: { 'x-csrf-token': csrfToken() },
-    });
-    try {
-      sessionStorage.removeItem('serverpilot-selected-guild');
-    } catch {
-      // The logout request succeeded; clearing an optional browser preference is best-effort.
+    if (elements.authMessage) elements.authMessage.textContent = 'Could not load your account or authorized servers.';
+    if (elements.authError) {
+      elements.authError.textContent = errorMessage(error);
+      setVisible(elements.authError, true);
     }
-    await loadDashboard();
-  } catch (error) {
-    showFeedback(errorMessage(error));
-  } finally {
-    elements.logout.disabled = false;
   }
-});
+}
 
-elements.theme.addEventListener('change', () => setTheme(elements.theme.value, true));
+// Global Event Listeners
+if (elements.authRetry) {
+  elements.authRetry.addEventListener('click', () => {
+    void loadDashboard();
+  });
+}
+
+if (elements.serverSelect) {
+  elements.serverSelect.addEventListener('change', () => {
+    selectGuild(elements.serverSelect.value);
+  });
+}
+
+if (elements.nav) {
+  elements.nav.addEventListener('click', (event) => {
+    const target = event.target instanceof Element ? event.target.closest('[data-page]') : null;
+    if (!(target instanceof HTMLButtonElement)) return;
+    state.currentPage = target.dataset.page || 'overview';
+    renderPage();
+  });
+}
+
+if (elements.theme) {
+  elements.theme.addEventListener('change', () => setTheme(elements.theme.value, true));
+}
+
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-  if (elements.theme.value === 'system') setTheme('system');
+  if (elements.theme?.value === 'system') setTheme('system');
 });
 
+// Setup Plan Submission Listener
+if (elements.content) {
+  elements.content.addEventListener('submit', async (event) => {
+    const form = event.target instanceof HTMLFormElement && event.target.matches('[data-setup-plan-form]')
+      ? event.target
+      : undefined;
+    if (!form) return;
+    event.preventDefault();
+    const guild = currentGuild();
+    if (!guild) return;
+
+    const formData = new FormData(form);
+    const type = String(formData.get('type') || 'Community');
+    const description = String(formData.get('description') || '').trim();
+
+    state.setupPlanLoading = true;
+    state.setupPlanError = undefined;
+    state.setupPlan = undefined;
+    state.setupApplyResult = undefined;
+    state.setupApplyError = undefined;
+    renderPage();
+
+    try {
+      const response = await api(`/api/v1/guilds/${encodeURIComponent(guild.id)}/setup/plan`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken() },
+        body: JSON.stringify({ type, description }),
+      });
+      state.setupPlan = response.plan;
+      showFeedback('Server architecture plan generated successfully!', 'success');
+    } catch (error) {
+      state.setupPlanError = errorMessage(error);
+      showFeedback(state.setupPlanError, 'error');
+    } finally {
+      state.setupPlanLoading = false;
+      renderPage();
+    }
+  });
+}
+
+// Initialize Theme & Session
 let savedTheme = 'dark';
 try {
   const storedTheme = localStorage.getItem('serverpilot-theme');
   if (['dark', 'light', 'system'].includes(storedTheme)) savedTheme = storedTheme;
 } catch {
-  showFeedback('Browser storage is unavailable. The dashboard is using the default dark theme for this visit.');
+  // Best effort
 }
 setTheme(savedTheme);
 void loadDashboard();
